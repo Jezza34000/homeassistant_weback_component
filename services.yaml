@@ -1,0 +1,21 @@
+go_to_location:
+  name: Go to location
+  description: Sends robot to an (X, Y) location.
+  target:
+    integration: vacuum
+  fields:
+    point:
+      name: Destination point
+      description: Point in format [x,y]
+      required: true
+
+clean_rectangle:
+  name: Clean rectangle
+  description: Commands the robot to clean the given rectangular area.
+  target:
+    integration: vacuum
+  fields:
+    rectangle:
+      name: Destination rectangle
+      description: Rectangle in format [x1,y1,x2,y2]
+      required: true
