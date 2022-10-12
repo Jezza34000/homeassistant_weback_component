@@ -9,14 +9,13 @@ from datetime import datetime, timedelta
 import configparser
 
 _LOGGER = logging.getLogger(__name__)
-
-AUTH_URL = "https://user.grit-cloud.com/prod/oauth"
+# Socket
 SOCK_OPEN = "Open"
 SOCK_CLOSE = "Close"
 SOCK_ERROR = "Error"
 SUCCESS_OK = 'success'
-
-# Cloud message
+# API
+AUTH_URL = "https://user.grit-cloud.com/prod/oauth"
 ROBOT_UPDATE = "thing_status_update"
 
 

@@ -44,7 +44,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the Weback component."""
-    _LOGGER.debug("Creating new Weback Vacuum Robot component")
+    _LOGGER.info("Creating new Weback Vacuum Robot component")
 
     hass.data[DOMAIN] = []
 
