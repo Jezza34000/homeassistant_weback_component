@@ -106,7 +106,6 @@ class WebackVacuumRobot(StateVacuumEntity):
                 | VacuumEntityFeature.START
         )
         _LOGGER.debug(f"Vacuum initialized: {self.name}")
-        #_LOGGER.debug(f"Vacuum Callback starting registration...")
         # device.register_update_callback(self.device_updated)
 
     # def device_updated(self, status):
@@ -119,6 +118,10 @@ class WebackVacuumRobot(StateVacuumEntity):
         _LOGGER.debug("Vacuum: async_update requested")
         await self.device.update()
         return
+
+    @property
+    def should_poll(self) -> bool:
+        return True
 
     # ==========================================================
     # Vacuum Entity
@@ -171,10 +174,6 @@ class WebackVacuumRobot(StateVacuumEntity):
     def error(self):
         _LOGGER.debug(f"Vacuum: error={self.device.error_info}")
         return self.device.error_info
-    
-    @property
-    def should_poll(self) -> bool:
-        return True
     
     @property
     def unique_id(self) -> str:

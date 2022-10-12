@@ -205,7 +205,6 @@ class VacDevice(WebackWssCtrl):
     # -> Method
 
     async def update(self):
-        _LOGGER.debug("update")
         if await self.update_status(self.name, self.sub_type):
             return True
         return False
@@ -216,7 +215,7 @@ class VacDevice(WebackWssCtrl):
         if not self.is_cleaning:
             _LOGGER.info(f"Vacuum: Can't set set fan/water speed (value={speed}) robot is not running.")
             return
-        # Checking value are allowed²
+        # Checking value are allowed
         if speed not in self.FAN_SPEEDS and speed not in self.MOP_SPEEDS:
             _LOGGER.error(f"Error: Fan/Mop value={speed} is not available")
             return

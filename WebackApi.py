@@ -237,7 +237,6 @@ class WebackWssCtrl:
         # self.update_callback = null_callback
         self.wst = None
         self.ws = None
-
         self.recv_message = queue.Queue()
 
     # def register_update_callback(self, callback):
@@ -354,34 +353,7 @@ class WebackWssCtrl:
             "thing_name": thing_name,
         }
         await self.publish_wss(payload)
-
-        if self.ack_command(thing_name, working_payload):
-            return True
-        return False
-
-    def ack_command(self, thing_name, working_payload):
-        """
-        Wait for command to get executed
-        """
-        _LOGGER.debug(f"WebackApi (WSS) ack_command={working_payload} for robot={thing_name}")
-        while True:
-            try:
-                item = self.recv_message.get(timeout=ACK_TIMEOUT)
-                if item is None:
-                    _LOGGER.warning(f"WebackApi (WSS) ack_command timeout")
-                    break
-                command = list(working_payload.keys())[0]
-                _LOGGER.debug(f"WebackApi (WSS) ack_command check if command={command} order={working_payload[command]} are validated = {item[command]}")
-                self.recv_message.task_done()
-                if item[command] == working_payload[command]:
-                    _LOGGER.debug(f"WebackApi (WSS) ack OK")
-                    return True
-                else:
-                    _LOGGER.debug(f"WebackApi (WSS) ack NOK")
-                    return False
-            except Exception as error:
-                _LOGGER.error(f"WebackApi (WSS) Timeout on ack_command={working_payload} (details={error})")
-        return False
+        return
 
     async def update_status(self, thing_name, sub_type):
         """
@@ -394,17 +366,24 @@ class WebackWssCtrl:
             "thing_name": thing_name,
         }
         await self.publish_wss(payload)
+        if await self.await_api_response():
+            return True
+        return False
 
+    async def await_api_response(self):
+        """
+        Wait for receiving an API response from WSS
+        """
         while True:
+            _LOGGER.warning(f"WebackApi (WSS) awaiting response...")
             try:
                 item = self.recv_message.get(timeout=ACK_TIMEOUT)
                 if item is None:
-                    _LOGGER.warning(f"WebackApi (WSS) update_status timeout")
+                    _LOGGER.warning(f"WebackApi (WSS) awaiting timeout")
                     break
-                # Update received
+                # Response received
                 self.recv_message.task_done()
                 return True
             except Exception as error:
-                _LOGGER.error(f"WebackApi (WSS) update_status exception (details={error})")
+                _LOGGER.error(f"WebackApi (WSS) awaiting exception (details={error})")
         return False
-
