@@ -25,10 +25,7 @@ class WebackApi:
     WeBack API
     Handle connexion with OAuth server to get WSS credentials
     """
-    def __init__(self, user, password, region,
-                 country="fr", app="WeBack",
-                 client_id="yugong_app", api_version="1.0"
-                 ):
+    def __init__(self, user, password, region, country, app, client_id, api_version):
         _LOGGER.debug("WebackApi __init__")
 
         # HTTP Oauth required param

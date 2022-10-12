@@ -14,6 +14,15 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "weback_vacuum"
 SCAN_INTERVAL = timedelta(seconds=60)
 CONF_REGION = 'region'
+CONF_LANGUAGE = 'language'
+CONF_APP = 'application'
+CONF_CLIENT_ID = 'client_id'
+CONF_API_VERS = 'api_version'
+
+DEFAULT_LANGUAGE = "en"
+DEFAULT_APP = "WeBack",
+DEFAULT_CLIENT_ID = "yugong_app"
+DEFAULT_API_VERS = "1.0"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -22,6 +31,10 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_USERNAME): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
                 vol.Required(CONF_REGION): cv.string,
+                vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): cv.string,
+                vol.Optional(CONF_APP, default=DEFAULT_APP): cv.string,
+                vol.Optional(CONF_CLIENT_ID, default=DEFAULT_CLIENT_ID): cv.string,
+                vol.Optional(CONF_API_VERS, default=DEFAULT_API_VERS): cv.string,
             }
         )
     },
@@ -39,6 +52,10 @@ async def async_setup(hass, config):
         config[DOMAIN].get(CONF_USERNAME), 
         config[DOMAIN].get(CONF_PASSWORD),
         config[DOMAIN].get(CONF_REGION),
+        config[DOMAIN].get(CONF_LANGUAGE),
+        config[DOMAIN].get(CONF_APP),
+        config[DOMAIN].get(CONF_CLIENT_ID),
+        config[DOMAIN].get(CONF_API_VERS),
     )
 
     _LOGGER.debug("Weback vacuum robots: login started")
