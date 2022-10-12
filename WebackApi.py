@@ -7,16 +7,21 @@ import hashlib
 import httpx
 from datetime import datetime, timedelta
 import configparser
+import queue
 
 _LOGGER = logging.getLogger(__name__)
+
 # Socket
 SOCK_OPEN = "Open"
 SOCK_CLOSE = "Close"
 SOCK_ERROR = "Error"
 SUCCESS_OK = 'success'
+N_RETRY = 5
+ACK_TIMEOUT = 5
 # API
 AUTH_URL = "https://user.grit-cloud.com/prod/oauth"
 ROBOT_UPDATE = "thing_status_update"
+MAP_DATA = "map_data"
 
 
 class WebackApi:
@@ -192,23 +197,27 @@ class WebackApi:
         timeout = httpx.Timeout(60.0, connect=60.0)
         try:
             async with httpx.AsyncClient(timeout=timeout) as client:
-                r = await client.post(url, **params)
-                if r.status_code == 200:
-                    # Server status OK
-                    _LOGGER.debug(f"WebackApi : Send HTTP OK, return=200")
-                    _LOGGER.debug(f"WebackApi : HTTP data received = {r.json()}")
-                    return r.json()
+                for attempt in range(N_RETRY):
+                    r = await client.post(url, **params)
+                    if r.status_code == 200:
+                        # Server status OK
+                        _LOGGER.debug(f"WebackApi : Send HTTP OK, return=200")
+                        _LOGGER.debug(f"WebackApi : HTTP data received = {r.json()}")
+                        return r.json()
+                    else:
+                        # Server status NOK
+                        _LOGGER.warning(f"WebackApi : Bad server response (status code={r.status_code}) retry... ({attempt}/{N_RETRY})")
                 else:
-                    # Server status NOK
-                    _LOGGER.error(f"WebackApi : Bad server response (status code={r.status_code})")
+                    _LOGGER.error(
+                        f"WebackApi : Bad server response after {N_RETRY} retry (status code={r.status_code})")
                     return {"msg": "error", "details": f"bad response code={r.status_code}"}
         except httpx.RequestError as e:
             _LOGGER.error(f"Send HTTP exception details={e}")
             return {"msg": "error", "details": e}
 
 
-def null_callback(message):
-    _LOGGER.debug(f"WebackVacuumApi (WSS) null_callback: {message}")
+# def null_callback(message):
+#     _LOGGER.debug(f"WebackVacuumApi (WSS) null_callback: {message}")
 
 
 class WebackWssCtrl:
@@ -225,13 +234,15 @@ class WebackWssCtrl:
         self.region_name = region_name
         self.wss_url = wss_url
         self.robot_status = None
-        self.update_callback = null_callback
+        # self.update_callback = null_callback
         self.wst = None
         self.ws = None
 
-    def register_update_callback(self, callback):
-        _LOGGER.debug(f"WebackVacuumApi (WSS) Callback registration is OK")
-        self.update_callback = callback
+        self.recv_message = queue.Queue()
+
+    # def register_update_callback(self, callback):
+    #     _LOGGER.debug(f"WebackVacuumApi (WSS) Callback registration is OK")
+    #     self.update_callback = callback
 
     async def connect_wss(self):
         """
@@ -289,8 +300,14 @@ class WebackWssCtrl:
         wss_data = json.loads(message)
         _LOGGER.debug(f"WebackApi (WSS) Msg received {wss_data}")
         if wss_data["notify_info"] == ROBOT_UPDATE:
+            self.recv_message.put(wss_data['thing_status'])
             self.robot_status = wss_data['thing_status']
-            self.update_callback(self.robot_status)
+            # self.update_callback(self.robot_status)
+        elif wss_data["notify_info"] == MAP_DATA:
+            # TODO : MAP support
+            _LOGGER.debug(f"WebackApi (WSS) MAP data received")
+        else:
+            _LOGGER.error(f"WebackApi (WSS) Received an unknown message from server : {wss_data}")
     
     async def publish_wss(self, dict_message):
         """
@@ -337,10 +354,34 @@ class WebackWssCtrl:
             "thing_name": thing_name,
         }
         await self.publish_wss(payload)
-        for i in range(3):
-            time.sleep(1)
-            await self.update_status(thing_name, sub_type)
-        return
+
+        if self.ack_command(thing_name, working_payload):
+            return True
+        return False
+
+    def ack_command(self, thing_name, working_payload):
+        """
+        Wait for command to get executed
+        """
+        _LOGGER.debug(f"WebackApi (WSS) ack_command={working_payload} for robot={thing_name}")
+        while True:
+            try:
+                item = self.recv_message.get(timeout=ACK_TIMEOUT)
+                if item is None:
+                    _LOGGER.warning(f"WebackApi (WSS) ack_command timeout")
+                    break
+                command = list(working_payload.keys())[0]
+                _LOGGER.debug(f"WebackApi (WSS) ack_command check if command={command} order={working_payload[command]} are validated = {item[command]}")
+                self.recv_message.task_done()
+                if item[command] == working_payload[command]:
+                    _LOGGER.debug(f"WebackApi (WSS) ack OK")
+                    return True
+                else:
+                    _LOGGER.debug(f"WebackApi (WSS) ack NOK")
+                    return False
+            except Exception as error:
+                _LOGGER.error(f"WebackApi (WSS) Timeout on ack_command={working_payload} (details={error})")
+        return False
 
     async def update_status(self, thing_name, sub_type):
         """
@@ -353,3 +394,17 @@ class WebackWssCtrl:
             "thing_name": thing_name,
         }
         await self.publish_wss(payload)
+
+        while True:
+            try:
+                item = self.recv_message.get(timeout=ACK_TIMEOUT)
+                if item is None:
+                    _LOGGER.warning(f"WebackApi (WSS) update_status timeout")
+                    break
+                # Update received
+                self.recv_message.task_done()
+                return True
+            except Exception as error:
+                _LOGGER.error(f"WebackApi (WSS) update_status exception (details={error})")
+        return False
+

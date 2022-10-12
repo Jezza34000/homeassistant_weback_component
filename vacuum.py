@@ -105,16 +105,14 @@ class WebackVacuumRobot(StateVacuumEntity):
                 | VacuumEntityFeature.LOCATE
                 | VacuumEntityFeature.START
         )
-
         _LOGGER.debug(f"Vacuum initialized: {self.name}")
+        #_LOGGER.debug(f"Vacuum Callback starting registration...")
+        # device.register_update_callback(self.device_updated)
 
-        _LOGGER.debug(f"Vacuum Callback starting registration...")
-        device.register_update_callback(self.device_updated)
-
-    def device_updated(self, status):
-        _LOGGER.debug(f"device_updated")
-        self.device.status = status
-        self.schedule_update_ha_state(False)
+    # def device_updated(self, status):
+    #     _LOGGER.debug(f"device_updated")
+    #     self.device.status = status
+    #     self.schedule_update_ha_state(False)
 
     async def async_update(self):
         """Update device's state"""

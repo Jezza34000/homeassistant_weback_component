@@ -206,8 +206,9 @@ class VacDevice(WebackWssCtrl):
 
     async def update(self):
         _LOGGER.debug("update")
-        await self.update_status(self.name, self.sub_type)
-        return
+        if await self.update_status(self.name, self.sub_type):
+            return True
+        return False
 
     async def set_fan_water_speed(self, speed):
         """ User for set both : fan speed and water level"""
