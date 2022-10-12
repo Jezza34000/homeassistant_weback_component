@@ -1,13 +1,15 @@
 """Support for WeBack robot vacuums."""
-from datetime import timedelta
 import logging
+from datetime import timedelta
+
+import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
+from homeassistant.const import (CONF_API_VERSION, CONF_CLIENT_ID,
+                                 CONF_PASSWORD, CONF_SCAN_INTERVAL,
+                                 CONF_USERNAME)
+
 from .VacDevice import VacDevice
 from .WebackApi import WebackApi
-from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.update_coordinator import (CoordinatorEntity, DataUpdateCoordinator )
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,9 +18,8 @@ SCAN_INTERVAL = timedelta(seconds=60)
 CONF_REGION = 'region'
 CONF_LANGUAGE = 'language'
 CONF_APP = 'application'
-CONF_CLIENT_ID = 'client_id'
-CONF_API_VERS = 'api_version'
 
+# Default values
 DEFAULT_LANGUAGE = "en"
 DEFAULT_APP = "WeBack"
 DEFAULT_CLIENT_ID = "yugong_app"
@@ -34,7 +35,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): cv.string,
                 vol.Optional(CONF_APP, default=DEFAULT_APP): cv.string,
                 vol.Optional(CONF_CLIENT_ID, default=DEFAULT_CLIENT_ID): cv.string,
-                vol.Optional(CONF_API_VERS, default=DEFAULT_API_VERS): cv.string,
+                vol.Optional(CONF_API_VERSION, default=DEFAULT_API_VERS): cv.string,
             }
         )
     },
@@ -55,7 +56,7 @@ async def async_setup(hass, config):
         config[DOMAIN].get(CONF_LANGUAGE),
         config[DOMAIN].get(CONF_APP),
         config[DOMAIN].get(CONF_CLIENT_ID),
-        config[DOMAIN].get(CONF_API_VERS),
+        config[DOMAIN].get(CONF_API_VERSION),
     )
 
     _LOGGER.debug("Weback vacuum robots: login started")

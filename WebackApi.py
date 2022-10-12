@@ -1,13 +1,14 @@
-import time
-import websocket
-import threading
+import configparser
+import hashlib
 import json
 import logging
-import hashlib
-import httpx
-from datetime import datetime, timedelta
-import configparser
 import queue
+import threading
+import time
+from datetime import datetime, timedelta
+
+import httpx
+import websocket
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,13 +17,13 @@ SOCK_OPEN = "Open"
 SOCK_CLOSE = "Close"
 SOCK_ERROR = "Error"
 SUCCESS_OK = 'success'
-N_RETRY = 5
-ACK_TIMEOUT = 5
+
 # API
 AUTH_URL = "https://user.grit-cloud.com/prod/oauth"
 ROBOT_UPDATE = "thing_status_update"
 MAP_DATA = "map_data"
-
+N_RETRY = 5
+ACK_TIMEOUT = 5
 
 class WebackApi:
     """

@@ -1,22 +1,18 @@
 """Support for Weback Vaccum Robots."""
-import logging
 import datetime
-import voluptuous as vol
+import logging
+
 import homeassistant.helpers.config_validation as cv
-from . import VacDevice
-from homeassistant.helpers.icon import icon_for_battery_level
-from . import (DOMAIN, SCAN_INTERVAL)
+import voluptuous as vol
+from homeassistant.components.vacuum import (STATE_CLEANING, STATE_DOCKED,
+                                             STATE_ERROR, STATE_IDLE,
+                                             STATE_PAUSED, STATE_RETURNING,
+                                             StateVacuumEntity,
+                                             VacuumEntityFeature)
 from homeassistant.helpers import entity_platform
-from homeassistant.components.vacuum import (
-    StateVacuumEntity,
-    VacuumEntityFeature,
-    STATE_IDLE,
-    STATE_PAUSED,
-    STATE_CLEANING,
-    STATE_RETURNING,
-    STATE_DOCKED,
-    STATE_ERROR
-)
+from homeassistant.helpers.icon import icon_for_battery_level
+
+from . import DOMAIN, SCAN_INTERVAL, VacDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -197,7 +193,7 @@ class WebackVacuumRobot(StateVacuumEntity):
     def extra_state_attributes(self) -> dict:
         """Return the device-specific state attributes of this vacuum."""
         data = {
-            "clean area": self.device.status['clean_area'],
+            "clean area": round(self.device.status['clean_area'], 1),
             "clean time": self.device.status['clean_time'],
             "volume": self.device.status['volume'],
             "voice": self.device.status['voice_switch'],

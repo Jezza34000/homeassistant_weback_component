@@ -6,6 +6,6 @@
     "codeowners": [
       "@Jezza34000"
     ],
-    "config_flow": true,
+    "config_flow": false,
     "version": "1.0"
   }
