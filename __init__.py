@@ -20,7 +20,7 @@ CONF_CLIENT_ID = 'client_id'
 CONF_API_VERS = 'api_version'
 
 DEFAULT_LANGUAGE = "en"
-DEFAULT_APP = "WeBack",
+DEFAULT_APP = "WeBack"
 DEFAULT_CLIENT_ID = "yugong_app"
 DEFAULT_API_VERS = "1.0"
 

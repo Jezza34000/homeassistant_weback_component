@@ -214,7 +214,7 @@ class WebackVacuumRobot(StateVacuumEntity):
     
     def on_error(self, error):
         """Handle robot's error"""
-        if error == "NoError":
+        if error == self.device.ROBOT_ERROR_NO:
             self._error = None
         else:
             self._error = error
