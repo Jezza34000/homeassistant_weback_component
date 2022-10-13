@@ -95,23 +95,24 @@ class WebackVacuumRobot(StateVacuumEntity):
                 | VacuumEntityFeature.STATUS
                 | VacuumEntityFeature.BATTERY
                 | VacuumEntityFeature.PAUSE
+                | VacuumEntityFeature.STOP
                 | VacuumEntityFeature.RETURN_HOME
                 | VacuumEntityFeature.FAN_SPEED
                 | VacuumEntityFeature.CLEAN_SPOT
                 | VacuumEntityFeature.LOCATE
                 | VacuumEntityFeature.START
         )
-        _LOGGER.debug(f"Vacuum initialized: {self.name}")
+        _LOGGER.info(f"Vacuum initialized: {self.name}")
 
     async def async_update(self):
         """Update device's state"""
         _LOGGER.debug("Vacuum: async_update requested")
         await self.device.update()
-        _LOGGER.debug("Vacuum: async_update done")
         return
 
     @property
     def should_poll(self) -> bool:
+        _LOGGER.debug("Vacuum: should_poll -> True")
         return True
 
     # ==========================================================
@@ -122,6 +123,12 @@ class WebackVacuumRobot(StateVacuumEntity):
     def name(self):
         """Return the name of the device."""
         return self.device.nickname
+
+    @property
+    def available(self):
+        _LOGGER.debug("Vacuum: available", self.device.is_available)
+        """Returns true if vacuum is online"""
+        return self.device.is_available
 
     @property
     def state(self):
@@ -186,7 +193,7 @@ class WebackVacuumRobot(StateVacuumEntity):
         """Return the device-specific state attributes of this vacuum."""
         data = {
             "clean area": round(self.device.robot_status['clean_area'], 1),
-            "clean time": self.device.robot_status['clean_time'],
+            "clean time": round(self.device.robot_status['clean_time'] / 60, 0),
             "volume": self.device.robot_status['volume'],
             "voice": self.device.robot_status['voice_switch'],
             "undisturb mode": self.device.robot_status['undisturb_mode'],
