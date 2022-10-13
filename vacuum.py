@@ -162,9 +162,14 @@ class WebackVacuumRobot(StateVacuumEntity):
 
     @property
     def fan_speed_list(self):
-        """Get the list of available fan speed steps of the vacuum cleaner."""
-        _LOGGER.debug(f"Vacuum: fan_speed_list={self.device.fan_speed_list}")
-        return self.device.fan_speed_list
+        """Get the list of available fan speed or /water level steps of the vacuum cleaner."""
+        # Check if robot is in Vacuum/Mop mode
+        if self.device.vacuum_or_mop == 1:
+            _LOGGER.debug(f"Vacuum: (vacuum mode) fan_speed_list={self.device.fan_speed_list}")
+            return self.device.fan_speed_list
+        else:
+            _LOGGER.debug(f"Vacuum: (mop mode) fan_speed_list={self.device.mop_level_list}")
+            return self.device.mop_level_list
 
     @property
     def error(self):

@@ -59,6 +59,10 @@ class VacDevice(WebackWssCtrl):
         MOP_SPEED_HIGH
     }
 
+    VACUUM_ON = 1
+    MOP_ON = 2
+
+
     # Error state
     ROBOT_ERROR = "Malfunction"
 
@@ -194,6 +198,11 @@ class VacDevice(WebackWssCtrl):
         return [self.FAN_SPEED_QUIET, self.FAN_SPEED_NORMAL, self.FAN_SPEED_HIGH]
 
     @property
+    def mop_level_list(self):
+        """ Return Mop level list available"""
+        return [self.MOP_SPEED_LOW, self.MOP_SPEED_NORMAL, self.MOP_SPEED_HIGH]
+
+    @property
     def clean_time(self):
         """Return clean time"""
         return self.robot_status["clean_time"]
@@ -202,6 +211,13 @@ class VacDevice(WebackWssCtrl):
     def clean_area(self):
         """Return clean area in square meter"""
         return self.robot_status["clean_area"]
+
+    @property
+    def vacuum_or_mop(self) -> int:
+        """ Find if the robot is in vacuum or mop mode """
+        if self.robot_status['fan_status'] == self.FAN_DISABLED and self.robot_status['water_level'] != self.MOP_DISABLED:
+            return self.MOP_ON
+        return self.VACUUM_ON
 
     # ==========================================================
     # Vacuum Entity
