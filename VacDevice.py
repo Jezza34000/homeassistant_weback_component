@@ -137,7 +137,10 @@ class VacDevice(WebackWssCtrl):
         self.name = thing_name
         self.nickname = thing_nickname
         self.sub_type = sub_type
-        self.status = thing_status
+
+        # First init status from HTTP API
+        if self.robot_status is None:
+            self.robot_status = thing_status
 
     # ==========================================================
     # Vacuum Entity
@@ -146,13 +149,13 @@ class VacDevice(WebackWssCtrl):
     @property
     def current_mode(self) -> str:
         """ Raw working_status field string """
-        return self.status['working_status']
+        return self.robot_status['working_status']
     
     @property
     def raw_status(self) -> str:
         """ Raw thing_status JSON """
-        _LOGGER.debug(f"raw_status {self.status}")
-        return self.status
+        _LOGGER.debug(f"raw_status {self.robot_status}")
+        return self.robot_status
     
     @property
     def is_cleaning(self) -> bool:
@@ -163,7 +166,7 @@ class VacDevice(WebackWssCtrl):
     @property
     def is_available(self):
         """ Boolean define if robot is connected to cloud """
-        return self.status['connected'] == 'true'
+        return self.robot_status['connected'] == 'true'
     
     @property
     def is_charging(self):
@@ -173,17 +176,17 @@ class VacDevice(WebackWssCtrl):
     @property
     def fan_status(self):
         """ Raw fan_status field string """
-        return self.status["fan_status"]
+        return self.robot_status["fan_status"]
     
     @property
     def error_info(self):
         """ Raw error_info field string """
-        return self.status["error_info"]
+        return self.robot_status["error_info"]
     
     @property
     def battery_level(self):
         """ Raw battery_level field integer """
-        return int(self.status["battery_level"])
+        return int(self.robot_status["battery_level"])
     
     @property
     def fan_speed_list(self):
@@ -193,20 +196,23 @@ class VacDevice(WebackWssCtrl):
     @property
     def clean_time(self):
         """Return clean time"""
-        return self.status["clean_time"]
+        return self.robot_status["clean_time"]
 
     @property
     def clean_area(self):
         """Return clean area in square meter"""
-        return self.status["clean_area"]
+        return self.robot_status["clean_area"]
 
     # ==========================================================
     # Vacuum Entity
     # -> Method
 
     async def update(self):
+        _LOGGER.debug("VacDevice: update")
         if await self.update_status(self.name, self.sub_type):
+            _LOGGER.debug("VacDevice: update OK")
             return True
+        _LOGGER.debug("VacDevice: update failed")
         return False
 
     async def set_fan_water_speed(self, speed):
@@ -228,7 +234,7 @@ class VacDevice(WebackWssCtrl):
         working_payload = {self.ASK_STATUS: self.CLEAN_MODE_AUTO}
         await self.send_command(self.name, self.sub_type, working_payload)
         return
-    
+
     async def turn_off(self):
         working_payload = {self.ASK_STATUS: self.CHARGE_MODE_RETURNING}
         await self.send_command(self.name, self.sub_type, working_payload)

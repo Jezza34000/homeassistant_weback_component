@@ -25,6 +25,7 @@ MAP_DATA = "map_data"
 N_RETRY = 5
 ACK_TIMEOUT = 5
 
+
 class WebackApi:
     """
     WeBack API
@@ -235,14 +236,9 @@ class WebackWssCtrl:
         self.region_name = region_name
         self.wss_url = wss_url
         self.robot_status = None
-        # self.update_callback = null_callback
         self.wst = None
         self.ws = None
         self.recv_message = queue.Queue()
-
-    # def register_update_callback(self, callback):
-    #     _LOGGER.debug(f"WebackVacuumApi (WSS) Callback registration is OK")
-    #     self.update_callback = callback
 
     async def connect_wss(self):
         """
@@ -354,6 +350,7 @@ class WebackWssCtrl:
             "thing_name": thing_name,
         }
         await self.publish_wss(payload)
+        time.sleep(2)
         return
 
     async def update_status(self, thing_name, sub_type):
@@ -376,7 +373,7 @@ class WebackWssCtrl:
         Wait for receiving an API response from WSS
         """
         while True:
-            _LOGGER.warning(f"WebackApi (WSS) awaiting response...")
+            _LOGGER.debug(f"WebackApi (WSS) awaiting response...")
             try:
                 item = self.recv_message.get(timeout=ACK_TIMEOUT)
                 if item is None:

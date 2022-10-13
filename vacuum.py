@@ -102,17 +102,12 @@ class WebackVacuumRobot(StateVacuumEntity):
                 | VacuumEntityFeature.START
         )
         _LOGGER.debug(f"Vacuum initialized: {self.name}")
-        # device.register_update_callback(self.device_updated)
-
-    # def device_updated(self, status):
-    #     _LOGGER.debug(f"device_updated")
-    #     self.device.status = status
-    #     self.schedule_update_ha_state(False)
 
     async def async_update(self):
         """Update device's state"""
         _LOGGER.debug("Vacuum: async_update requested")
         await self.device.update()
+        _LOGGER.debug("Vacuum: async_update done")
         return
 
     @property
@@ -126,7 +121,6 @@ class WebackVacuumRobot(StateVacuumEntity):
     @property
     def name(self):
         """Return the name of the device."""
-        _LOGGER.debug(f"Vacuum: name={self.device.nickname}")
         return self.device.nickname
 
     @property
@@ -143,7 +137,6 @@ class WebackVacuumRobot(StateVacuumEntity):
     @property
     def battery_level(self):
         """Return the battery level of the vacuum cleaner."""
-        _LOGGER.debug(f"Vacuum: battery_level={self.device.battery_level}")
         return self.device.battery_level
 
     @property
@@ -186,18 +179,17 @@ class WebackVacuumRobot(StateVacuumEntity):
     @property
     def is_charging(self):
         """Return true if vacuum is currently charging."""
-        _LOGGER.debug(f"Vacuum: is_charging={self.device.is_charging}")
         return self.device.is_charging
     
     @property
     def extra_state_attributes(self) -> dict:
         """Return the device-specific state attributes of this vacuum."""
         data = {
-            "clean area": round(self.device.status['clean_area'], 1),
-            "clean time": self.device.status['clean_time'],
-            "volume": self.device.status['volume'],
-            "voice": self.device.status['voice_switch'],
-            "undisturb mode": self.device.status['undisturb_mode'],
+            "clean area": round(self.device.robot_status['clean_area'], 1),
+            "clean time": self.device.robot_status['clean_time'],
+            "volume": self.device.robot_status['volume'],
+            "voice": self.device.robot_status['voice_switch'],
+            "undisturb mode": self.device.robot_status['undisturb_mode'],
         }
         return data
 
