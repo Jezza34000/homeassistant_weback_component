@@ -55,7 +55,7 @@ SERVICE_CLEAN_RECTANGLE = 'clean_rectangle'
 ATTR_RECTANGLE = "rectangle"
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, async_add_entities):
     """Set up the Weback robot vacuums."""
     vacuums = []
     for device in hass.data[DOMAIN]:

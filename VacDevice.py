@@ -62,7 +62,6 @@ class VacDevice(WebackWssCtrl):
     VACUUM_ON = 1
     MOP_ON = 2
 
-
     # Error state
     ROBOT_ERROR = "Malfunction"
 

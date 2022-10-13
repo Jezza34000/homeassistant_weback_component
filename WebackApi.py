@@ -24,6 +24,7 @@ ROBOT_UPDATE = "thing_status_update"
 MAP_DATA = "map_data"
 N_RETRY = 5
 ACK_TIMEOUT = 5
+HTTP_TIMEOUT = 15
 
 
 class WebackApi:
@@ -196,7 +197,7 @@ class WebackApi:
         Send HTTP request
         """
         _LOGGER.debug(f"Send HTTP request Url={url} Params={params}")
-        timeout = httpx.Timeout(60.0, connect=60.0)
+        timeout = httpx.Timeout(HTTP_TIMEOUT, connect=30.0)
         try:
             async with httpx.AsyncClient(timeout=timeout) as client:
                 for attempt in range(N_RETRY):
