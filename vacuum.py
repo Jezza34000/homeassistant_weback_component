@@ -1,7 +1,6 @@
 """Support for Weback Vaccum Robots."""
 import datetime
 import logging
-
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
 from homeassistant.components.vacuum import (STATE_CLEANING, STATE_DOCKED,
@@ -101,6 +100,7 @@ class WebackVacuumRobot(StateVacuumEntity):
                 | VacuumEntityFeature.CLEAN_SPOT
                 | VacuumEntityFeature.LOCATE
                 | VacuumEntityFeature.START
+                | VacuumEntityFeature.SEND_COMMAND
         )
         _LOGGER.info(f"Vacuum initialized: {self.name}")
 
@@ -108,6 +108,7 @@ class WebackVacuumRobot(StateVacuumEntity):
         """Update device's state"""
         _LOGGER.debug("Vacuum: async_update requested")
         await self.device.update()
+        _LOGGER.debug("Vacuum: async_update done!")
         return
 
     @property
@@ -123,6 +124,15 @@ class WebackVacuumRobot(StateVacuumEntity):
     def name(self):
         """Return the name of the device."""
         return self.device.nickname
+
+    # @property
+    # def device_info(self):
+    #     """Return the device info."""
+    #     return {
+    #         "identifiers": "",
+    #         "name": "",
+    #         "manufacturer": ""
+    #     }
 
     @property
     def available(self):
@@ -165,9 +175,11 @@ class WebackVacuumRobot(StateVacuumEntity):
         """Get the list of available fan speed or /water level steps of the vacuum cleaner."""
         # Check if robot is in Vacuum/Mop mode
         if self.device.vacuum_or_mop == 1:
+            # Vacuum mode
             _LOGGER.debug(f"Vacuum: (vacuum mode) fan_speed_list={self.device.fan_speed_list}")
             return self.device.fan_speed_list
         else:
+            # Mop mode
             _LOGGER.debug(f"Vacuum: (mop mode) fan_speed_list={self.device.mop_level_list}")
             return self.device.mop_level_list
 
@@ -196,14 +208,24 @@ class WebackVacuumRobot(StateVacuumEntity):
     @property
     def extra_state_attributes(self) -> dict:
         """Return the device-specific state attributes of this vacuum."""
-        data = {
+        return {
             "clean area": round(self.device.robot_status['clean_area'], 1),
             "clean time": round(self.device.robot_status['clean_time'] / 60, 0),
             "volume": self.device.robot_status['volume'],
             "voice": self.device.robot_status['voice_switch'],
             "undisturb mode": self.device.robot_status['undisturb_mode'],
         }
-        return data
+
+    @property
+    def device_state_attributes(self):
+        """Return the device-specific state attributes of this vacuum."""
+        return {
+            "clean area": round(self.device.robot_status['clean_area'], 1),
+            "clean time": round(self.device.robot_status['clean_time'] / 60, 0),
+            "volume": self.device.robot_status['volume'],
+            "voice": self.device.robot_status['voice_switch'],
+            "undisturb mode": self.device.robot_status['undisturb_mode'],
+        }
 
     # ==========================================================
     # Vacuum Entity

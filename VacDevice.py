@@ -226,9 +226,8 @@ class VacDevice(WebackWssCtrl):
     async def update(self):
         _LOGGER.debug("VacDevice: update")
         if await self.update_status(self.name, self.sub_type):
-            _LOGGER.debug("VacDevice: update OK")
             return True
-        _LOGGER.debug("VacDevice: update failed")
+        _LOGGER.error("VacDevice: update failed")
         return False
 
     async def set_fan_water_speed(self, speed):
