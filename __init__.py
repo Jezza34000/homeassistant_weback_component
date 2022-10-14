@@ -5,8 +5,7 @@ from datetime import timedelta
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
 from homeassistant.const import (CONF_API_VERSION, CONF_CLIENT_ID,
-                                 CONF_PASSWORD, CONF_SCAN_INTERVAL,
-                                 CONF_USERNAME)
+                                 CONF_PASSWORD, CONF_USERNAME)
 
 from .VacDevice import VacDevice
 from .WebackApi import WebackApi
@@ -14,7 +13,6 @@ from .WebackApi import WebackApi
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "weback_vacuum"
-SCAN_INTERVAL = timedelta(seconds=60)
 CONF_REGION = 'region'
 CONF_LANGUAGE = 'language'
 CONF_APP = 'application'

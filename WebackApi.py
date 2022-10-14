@@ -1,8 +1,8 @@
+import asyncio
 import configparser
 import hashlib
 import json
 import logging
-import queue
 import threading
 import time
 from datetime import datetime, timedelta
@@ -170,7 +170,7 @@ class WebackApi:
         """
         Get robot things list registered from Weback server
         """
-        _LOGGER.debug("WebackApi - robot list")
+        _LOGGER.debug("WebackApi ask : robot list")
 
         params = {
             "json": {
@@ -224,6 +224,139 @@ class WebackApi:
 
 
 class WebackWssCtrl:
+
+    # Clean mode
+    CLEAN_MODE_AUTO = 'AutoClean'
+    CLEAN_MODE_EDGE = 'EdgeClean'
+    CLEAN_MODE_EDGE_DETECT = 'EdgeDetect'
+    CLEAN_MODE_SPOT = 'SpotClean'
+    CLEAN_MODE_SINGLE_ROOM = 'RoomClean'
+    CLEAN_MODE_MOP = 'MopClean'
+    CLEAN_MODE_SMART = 'SmartClean'
+    CLEAN_MODE_Z = 'ZmodeClean'
+    ROBOT_PLANNING_LOCATION = 'PlanningLocation'
+    ROBOT_PLANNING_RECT = 'PlanningRect'
+
+    # Other Working state
+    RELOCATION = 'Relocation'
+    CHARGE_MODE_RETURNING = 'BackCharging'
+    DIRECTION_CONTROL = 'DirectionControl'
+    ROBOT_LOCATION_SOUND = 'LocationAlarm'
+
+    # Charging state
+    CHARGE_MODE_CHARGING = 'Charging'
+    CHARGE_MODE_DOCK_CHARGING = 'PileCharging'
+    CHARGE_MODE_DIRECT_CHARGING = 'DirCharging'
+    CHARGE_MODE_CHARGE_DONE = 'ChargeDone'
+
+    # Idle state
+    CHARGE_MODE_IDLE = 'Hibernating'
+
+    # Standby/Paused state
+    CLEAN_MODE_STOP = 'Standby'
+
+    # Fan level
+    FAN_DISABLED = 'None'
+    FAN_SPEED_QUIET = 'Quiet'
+    FAN_SPEED_NORMAL = 'Normal'
+    FAN_SPEED_HIGH = 'Strong'
+    FAN_SPEED_MAX = 'Max'
+
+    FAN_SPEEDS = {
+        FAN_SPEED_QUIET,
+        FAN_SPEED_NORMAL,
+        FAN_SPEED_HIGH
+    }
+
+    # MOP Water level
+    MOP_DISABLED = 'None'
+    MOP_SPEED_LOW = 'Low'
+    MOP_SPEED_NORMAL = 'Default'
+    MOP_SPEED_HIGH = 'High'
+
+    MOP_SPEEDS = {
+        MOP_SPEED_LOW,
+        MOP_SPEED_NORMAL,
+        MOP_SPEED_HIGH
+    }
+
+    VACUUM_ON = 1
+    MOP_ON = 2
+
+    # Error state
+    ROBOT_ERROR = "Malfunction"
+
+    # Robot Error codes
+    ROBOT_ERROR_NO = "NoError"
+    ROBOT_ERROR_UNKNOWN = "UnknownError"
+    ROBOT_ERROR_LEFT_WHEEL = "LeftWheelWinded"
+    ROBOT_ERROR_RIGHT_WHEEL = "RightWheelWinded"
+    ROBOT_ERROR_WHEEL_WINDED = "WheelWinded"
+    ROBOT_ERROR_60017 = "LeftWheelSuspend"
+    ROBOT_ERROR_60019 = "RightWheelSuspend"
+    ROBOT_ERROR_WHEEL_SUSPEND = "WheelSuspend"
+    ROBOT_ERROR_LEFT_BRUSH = "LeftSideBrushWinded"
+    ROBOT_ERROR_RIGHT_BRUSH = "RightSideBrushWinded"
+    ROBOT_ERROR_SIDE_BRUSH = "SideBrushWinded"
+    ROBOT_ERROR_60031 = "RollingBrushWinded"
+    ROBOT_ERROR_COLLISION = "AbnormalCollisionSwitch"
+    ROBOT_ERROR_GROUND = "AbnormalAntiFallingFunction"
+    ROBOT_ERROR_FAN = "AbnormalFan"
+    ROBOT_ERROR_DUSTBOX2 = "NoDustBox"
+    ROBOT_ERROR_CHARGE_FOUND = "CannotFindCharger"
+    ROBOT_ERROR_CHARGE_ERROR = "BatteryMalfunction"
+    ROBOT_ERROR_LOWPOWER = "LowPower"
+    ROBOT_ERROR_CHARGE = "BottomNotOpenedWhenCharging"
+    ROBOT_ERROR_CAMERA_CONTACT_FAIL = "CameraContactFailure"
+    ROBOT_ERROR_LIDAR_CONNECT_FAIL = "LidarConnectFailure"
+    ROBOT_ERROR_TANK = "AbnormalTank"
+    ROBOT_ERROR_SPEAKER = "AbnormalSpeaker"
+    ROBOT_ERROR_NO_WATER_BOX = "NoWaterBox"
+    ROBOT_ERROR_NO_WATER_MOP = "NoWaterMop"
+    ROBOT_ERROR_WATER_BOX_EMPTY = "WaterBoxEmpty"
+    ROBOT_ERROR_FLOATING = "WheelSuspendInMidair"
+    ROBOT_ERROR_DUSTBOX = "DustBoxFull"
+    ROBOT_ERROR_GUN_SHUA = "BrushTangled"
+    ROBOT_ERROR_TRAPPED = "RobotTrapped"
+    ROBOT_CHARGING_ERROR = "ChargingError"
+    ROBOT_BOTTOM_NOT_OPENED_WHEN_CHARGING = "BottomNotOpenedWhenCharging"
+    ROBOT_ERROR_60024 = "CodeDropped"
+    ROBOT_ERROR_60026 = "NoDustBox"
+    ROBOT_ERROR_60028 = "OperatingCurrentOverrun"
+    ROBOT_ERROR_60029 = "VacuumMotorTangled"
+    ROBOT_ERROR_60032 = "StuckWheels"
+    ROBOT_ERROR_STUCK = "RobotStuck"
+    ROBOT_ERROR_BE_TRAPPED = "RobotBeTrapped"
+    ROBOT_ERROR_COVER_STUCK = "LaserHeadCoverStuck"
+    ROBOT_ERROR_LASER_HEAD = "AbnormalLaserHead"
+    ROBOT_ERROR_WALL_BLOCKED = "WallSensorBlocked"
+    ROBOT_ERROR_VIR_WALL_FORB = "VirtualWallForbiddenZoneSettingError"
+
+    CLEANING_STATES = {
+        DIRECTION_CONTROL, ROBOT_PLANNING_RECT, RELOCATION, CLEAN_MODE_Z, CLEAN_MODE_AUTO,
+        CLEAN_MODE_EDGE, CLEAN_MODE_EDGE_DETECT, CLEAN_MODE_SPOT, CLEAN_MODE_SINGLE_ROOM,
+        CLEAN_MODE_MOP, CLEAN_MODE_SMART
+    }
+
+    CHARGING_STATES = {
+        CHARGE_MODE_CHARGING, CHARGE_MODE_DOCK_CHARGING, CHARGE_MODE_DIRECT_CHARGING
+    }
+
+    DOCKED_STATES = {
+        CHARGE_MODE_CHARGING, CHARGE_MODE_DOCK_CHARGING, CHARGE_MODE_DIRECT_CHARGING, CHARGE_MODE_CHARGE_DONE
+    }
+
+    # Payload attributes
+    ASK_STATUS = "working_status"
+    SET_FAN_SPEED = "fan_status"
+    GOTO_POINT = "goto_point"
+    RECTANGLE_INFO = "virtual_rect_info"
+    SPEAKER_VOLUME = "volume"
+    # Payload switches
+    VOICE_SWITCH = "voice_switch"
+    UNDISTURB_MODE = "undisturb_mode"
+    SWITCH_VALUES = ['on', 'off']
+
     """
     WebSocket Weback API controller
     Handle websocket to send/receive robot control
@@ -237,11 +370,12 @@ class WebackWssCtrl:
         self.region_name = region_name
         self.wss_url = wss_url
         self.robot_status = None
+        self.subscriber = []
         self.wst = None
         self.ws = None
-        self.recv_message = queue.Queue()
+        self._refresh_time = 60
 
-    async def connect_wss(self):
+    async def open_wss_thread(self):
         """
         Connect WebSocket to Weback Server and create a thread to maintain connexion alive
         """
@@ -262,7 +396,8 @@ class WebackWssCtrl:
             self.wst.start()
             
             if self.wst.is_alive():
-                _LOGGER.debug("WebackApi (WSS) Connecting...")
+                _LOGGER.debug("WebackApi (WSS) Thread was init")
+                return True
             else:
                 _LOGGER.error("WebackApi (WSS) Thread connection init has FAILED")
                 return False
@@ -271,20 +406,38 @@ class WebackWssCtrl:
             self.socket_state = SOCK_ERROR
             _LOGGER.debug("WebackApi (WSS) Error while opening socket", e)
             return False
+        
+    async def connect_wss(self):
+        if self.socket_state == SOCK_OPEN:
+            return True
+
+        _LOGGER.debug(f"WebackApi (WSS) Not connected, connecting...")
+
+        if await self.open_wss_thread():
+            logging.debug(f"WebackApi (WSS) Connecting...")
+        else:
+            return False
+
+        for i in range(15):
+            logging.debug(f"WebackApi (WSS) awaiting connexion established... {i}")
+            if self.socket_state == SOCK_OPEN:
+                return True
+            time.sleep(0.5)
+        return False
     
     def on_error(self, ws, error):
         """Socket "On_Error" event"""
-        if error:
-            details = f"(details : {error})"
-        _LOGGER.debug(f"WebackApi (WSS) Error {details}")
-        ws.close()
+        # if error:
+        #     details = f"(details : {error})"
+        # _LOGGER.debug(f"WebackApi (WSS) Error {details}")
+        # ws.close()
         self.socket_state = SOCK_ERROR
 
     def on_close(self, ws, close_status_code, close_msg):
         """Socket "On_Close" event"""
-        if close_status_code or close_msg:
-            details = f"(details : {close_status_code} / {close_msg})"
-        _LOGGER.debug(f"WebackApi (WSS) Closed {details}")
+        # if close_status_code or close_msg:
+        #     details = f"(details : {close_status_code} / {close_msg})"
+        # _LOGGER.debug(f"WebackApi (WSS) Closed {details}")
         self.socket_state = SOCK_CLOSE
     
     def on_open(self, ws):
@@ -297,9 +450,14 @@ class WebackWssCtrl:
         wss_data = json.loads(message)
         _LOGGER.debug(f"WebackApi (WSS) Msg received {wss_data}")
         if wss_data["notify_info"] == ROBOT_UPDATE:
-            self.recv_message.put(wss_data['thing_status'])
-            self.robot_status = wss_data['thing_status']
-            # self.update_callback(self.robot_status)
+            self.adapt_refresh_time(wss_data['thing_status'])
+
+            if wss_data['thing_status'] != self.robot_status:
+                _LOGGER.debug('New update from cloud ->> push update')
+                self.robot_status = wss_data['thing_status']
+                self._call_subscriber()
+            else:
+                _LOGGER.debug('No update from cloud')
         elif wss_data["notify_info"] == MAP_DATA:
             # TODO : MAP support
             _LOGGER.debug(f"WebackApi (WSS) MAP data received")
@@ -312,18 +470,7 @@ class WebackWssCtrl:
         """
         json_message = json.dumps(dict_message)
         _LOGGER.debug(f"WebackApi (WSS) Publishing message : {json_message}")
-        if self.socket_state != SOCK_OPEN:
-            _LOGGER.debug(f"WebackApi (WSS) Not connected, state: {self.socket_state}, reconnecting...")
-            await self.connect_wss()
-
-        logging.debug(f"WebackApi (WSS) Thread was init, looking for cnx")
-
-        for i in range(15):
-            logging.debug(f"WebackApi (WSS) awaiting connexion established... {i}")
-            if self.socket_state == SOCK_OPEN:
-                break
-            time.sleep(0.5)
-
+        
         if self.socket_state == SOCK_OPEN:
             try:
                 self.ws.send(json_message)
@@ -333,7 +480,7 @@ class WebackWssCtrl:
                 _LOGGER.debug(f"WebackApi (WSS) Error while publishing message (details: {e})")
                 self.socket_state = SOCK_CLOSE
         else:
-            _LOGGER.debug(f"WebackApi (WSS) Error while publishing message, can't reconnect")
+            _LOGGER.debug(f"WebackApi (WSS) Error while publishing message. Socket_state={self.socket_state}")
         return False
     
     async def send_command(self, thing_name, sub_type, working_payload):
@@ -351,8 +498,15 @@ class WebackWssCtrl:
             "thing_name": thing_name,
         }
         await self.publish_wss(payload)
-        time.sleep(2)
+        await self.force_cmd_refresh(thing_name, sub_type)
         return
+
+    async def force_cmd_refresh(self, thing_name, sub_type):
+        """ Force refresh """
+        _LOGGER.debug(f"WebackApi (WSS) force refresh after sending cmd...")
+        for i in range(4):
+            await asyncio.sleep(0.6)
+            await self.update_status(thing_name, sub_type)
 
     async def update_status(self, thing_name, sub_type):
         """
@@ -365,24 +519,36 @@ class WebackWssCtrl:
             "thing_name": thing_name,
         }
         await self.publish_wss(payload)
-        if await self.await_api_response():
-            return True
-        return False
 
-    async def await_api_response(self):
-        """
-        Wait for receiving an API response from WSS
-        """
+    def adapt_refresh_time(self, status):
+        """Adapt refreshing time depending on robot status"""
+        _LOGGER.debug(f"WebackApi (WSS) adapt for : {status}")
+        if status['working_status'] in self.DOCKED_STATES:
+            _LOGGER.debug("WebackApi (WSS) > Set refreshing to 120s")
+            self._refresh_time = 120
+        else:
+            _LOGGER.debug("WebackApi (WSS) > Set refreshing to 5s")
+            self._refresh_time = 5
+    
+    async def refresh_handler(self, thing_name, sub_type):
+        _LOGGER.debug("WebackApi (WSS) Start refresh_handler")
         while True:
-            _LOGGER.debug(f"WebackApi (WSS) awaiting response...")
             try:
-                item = self.recv_message.get(timeout=ACK_TIMEOUT)
-                if item is None:
-                    _LOGGER.warning(f"WebackApi (WSS) awaiting timeout")
-                    break
-                # Response received
-                self.recv_message.task_done()
-                return True
-            except Exception as error:
-                _LOGGER.error(f"WebackApi (WSS) awaiting exception (details={error})")
-        return False
+                if self.socket_state != SOCK_OPEN:
+                    await self.connect_wss()
+
+                _LOGGER.debug("WebackApi (WSS) Refreshing...")
+                await self.update_status(thing_name, sub_type)
+                await asyncio.sleep(self._refresh_time)
+            except:
+                _LOGGER.error("WebackApi (WSS) Error during refresh_handler")
+                break
+
+    def subscribe(self, subscriber):
+        _LOGGER.debug("WebackApi (WSS): adding a new subscriber")
+        self.subscriber.append(subscriber)
+
+    def _call_subscriber(self):
+        _LOGGER.debug("WebackApi (WSS): Calling subscriber (schedule_update_ha_state)")
+        for subscriber in self.subscriber:
+            subscriber(self)

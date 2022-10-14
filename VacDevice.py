@@ -1,139 +1,11 @@
 import logging
+
 from .WebackApi import WebackWssCtrl
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class VacDevice(WebackWssCtrl):
-    # Clean mode
-    CLEAN_MODE_AUTO = 'AutoClean'
-    CLEAN_MODE_EDGE = 'EdgeClean'
-    CLEAN_MODE_EDGE_DETECT = 'EdgeDetect'
-    CLEAN_MODE_SPOT = 'SpotClean'
-    CLEAN_MODE_SINGLE_ROOM = 'RoomClean'
-    CLEAN_MODE_MOP = 'MopClean'
-    CLEAN_MODE_SMART = 'SmartClean'
-    CLEAN_MODE_Z = 'ZmodeClean'
-    ROBOT_PLANNING_LOCATION = 'PlanningLocation'
-    ROBOT_PLANNING_RECT = 'PlanningRect'
-
-    # Other Working state
-    RELOCATION = 'Relocation'
-    CHARGE_MODE_RETURNING = 'BackCharging'
-    DIRECTION_CONTROL = 'DirectionControl'
-    ROBOT_LOCATION_SOUND = 'LocationAlarm'
-
-    # Charging state
-    CHARGE_MODE_CHARGING = 'Charging'
-    CHARGE_MODE_DOCK_CHARGING = 'PileCharging'
-    CHARGE_MODE_DIRECT_CHARGING = 'DirCharging'
-    CHARGE_MODE_CHARGE_DONE = 'ChargeDone'
-
-    # Idle state
-    CHARGE_MODE_IDLE = 'Hibernating'
-
-    # Standby/Paused state
-    CLEAN_MODE_STOP = 'Standby'
-
-    # Fan level
-    FAN_DISABLED = 'Pause'
-    FAN_SPEED_QUIET = 'Quiet'
-    FAN_SPEED_NORMAL = 'Normal'
-    FAN_SPEED_HIGH = 'Strong'
-
-    FAN_SPEEDS = {
-        FAN_SPEED_QUIET,
-        FAN_SPEED_NORMAL,
-        FAN_SPEED_HIGH
-    }
-
-    # MOP Water level
-    MOP_DISABLED = 'None'
-    MOP_SPEED_LOW = 'Low'
-    MOP_SPEED_NORMAL = 'Default'
-    MOP_SPEED_HIGH = 'High'
-
-    MOP_SPEEDS = {
-        MOP_SPEED_LOW,
-        MOP_SPEED_NORMAL,
-        MOP_SPEED_HIGH
-    }
-
-    VACUUM_ON = 1
-    MOP_ON = 2
-
-    # Error state
-    ROBOT_ERROR = "Malfunction"
-
-    # Robot Error codes
-    ROBOT_ERROR_NO = "NoError"
-    ROBOT_ERROR_UNKNOWN = "UnknownError"
-    ROBOT_ERROR_LEFT_WHEEL = "LeftWheelWinded"
-    ROBOT_ERROR_RIGHT_WHEEL = "RightWheelWinded"
-    ROBOT_ERROR_WHEEL_WINDED = "WheelWinded"
-    ROBOT_ERROR_60017 = "LeftWheelSuspend"
-    ROBOT_ERROR_60019 = "RightWheelSuspend"
-    ROBOT_ERROR_WHEEL_SUSPEND = "WheelSuspend"
-    ROBOT_ERROR_LEFT_BRUSH = "LeftSideBrushWinded"
-    ROBOT_ERROR_RIGHT_BRUSH = "RightSideBrushWinded"
-    ROBOT_ERROR_SIDE_BRUSH = "SideBrushWinded"
-    ROBOT_ERROR_60031 = "RollingBrushWinded"
-    ROBOT_ERROR_COLLISION = "AbnormalCollisionSwitch"
-    ROBOT_ERROR_GROUND = "AbnormalAntiFallingFunction"
-    ROBOT_ERROR_FAN = "AbnormalFan"
-    ROBOT_ERROR_DUSTBOX2 = "NoDustBox"
-    ROBOT_ERROR_CHARGE_FOUND = "CannotFindCharger"
-    ROBOT_ERROR_CHARGE_ERROR = "BatteryMalfunction"
-    ROBOT_ERROR_LOWPOWER = "LowPower"
-    ROBOT_ERROR_CHARGE = "BottomNotOpenedWhenCharging"
-    ROBOT_ERROR_CAMERA_CONTACT_FAIL = "CameraContactFailure"
-    ROBOT_ERROR_LIDAR_CONNECT_FAIL = "LidarConnectFailure"
-    ROBOT_ERROR_TANK = "AbnormalTank"
-    ROBOT_ERROR_SPEAKER = "AbnormalSpeaker"
-    ROBOT_ERROR_NO_WATER_BOX = "NoWaterBox"
-    ROBOT_ERROR_NO_WATER_MOP = "NoWaterMop"
-    ROBOT_ERROR_WATER_BOX_EMPTY = "WaterBoxEmpty"
-    ROBOT_ERROR_FLOATING = "WheelSuspendInMidair"
-    ROBOT_ERROR_DUSTBOX = "DustBoxFull"
-    ROBOT_ERROR_GUN_SHUA = "BrushTangled"
-    ROBOT_ERROR_TRAPPED = "RobotTrapped"
-    ROBOT_CHARGING_ERROR = "ChargingError"
-    ROBOT_BOTTOM_NOT_OPENED_WHEN_CHARGING = "BottomNotOpenedWhenCharging"
-    ROBOT_ERROR_60024 = "CodeDropped"
-    ROBOT_ERROR_60026 = "NoDustBox"
-    ROBOT_ERROR_60028 = "OperatingCurrentOverrun"
-    ROBOT_ERROR_60029 = "VacuumMotorTangled"
-    ROBOT_ERROR_60032 = "StuckWheels"
-    ROBOT_ERROR_STUCK = "RobotStuck"
-    ROBOT_ERROR_BE_TRAPPED = "RobotBeTrapped"
-    ROBOT_ERROR_COVER_STUCK = "LaserHeadCoverStuck"
-    ROBOT_ERROR_LASER_HEAD = "AbnormalLaserHead"
-    ROBOT_ERROR_WALL_BLOCKED = "WallSensorBlocked"
-    ROBOT_ERROR_VIR_WALL_FORB = "VirtualWallForbiddenZoneSettingError"
-
-    CLEANING_STATES = {
-        DIRECTION_CONTROL, ROBOT_PLANNING_RECT, RELOCATION, CLEAN_MODE_Z, CLEAN_MODE_AUTO,
-        CLEAN_MODE_EDGE, CLEAN_MODE_EDGE_DETECT, CLEAN_MODE_SPOT, CLEAN_MODE_SINGLE_ROOM,
-        CLEAN_MODE_MOP, CLEAN_MODE_SMART
-    }
-    CHARGING_STATES = {
-        CHARGE_MODE_CHARGING, CHARGE_MODE_DOCK_CHARGING, CHARGE_MODE_DIRECT_CHARGING
-    }
-    DOCKED_STATES = {
-        CHARGE_MODE_IDLE, CHARGE_MODE_CHARGING, CHARGE_MODE_DOCK_CHARGING, CHARGE_MODE_DIRECT_CHARGING
-    }
-
-    # Payload attributes
-    ASK_STATUS = "working_status"
-    SET_FAN_SPEED = "fan_status"
-    GOTO_POINT = "goto_point"
-    RECTANGLE_INFO = "virtual_rect_info"
-    SPEAKER_VOLUME = "volume"
-    # Payload switches
-    VOICE_SWITCH = "voice_switch"
-    UNDISTURB_MODE = "undisturb_mode"
-    SWITCH_VALUES = ['on', 'off']
-    
     def __init__(self, thing_name, thing_nickname, sub_type, thing_status, wss_url, region_name, jwt_token):
         _LOGGER.debug("WebackApi RobotController __init__")
         super().__init__(wss_url, region_name, jwt_token)
@@ -144,6 +16,17 @@ class VacDevice(WebackWssCtrl):
         # First init status from HTTP API
         if self.robot_status is None:
             self.robot_status = thing_status
+
+    # ==========================================================
+    # Update controller
+
+    async def watch_state(self):
+        """ State watcher from VacDevice"""
+        _LOGGER.debug(f"VacDevice: starting state watcher for= {self.name} {self.sub_type}")
+        try:
+            await self.refresh_handler(self.name, self.sub_type)
+        except:
+            _LOGGER.exception('Error on watch_state starting refresh_handler')
 
     # ==========================================================
     # Vacuum Entity
@@ -177,11 +60,6 @@ class VacDevice(WebackWssCtrl):
         return self.current_mode in self.CHARGING_STATES
     
     @property
-    def fan_status(self):
-        """ Raw fan_status field string """
-        return self.robot_status["fan_status"]
-    
-    @property
     def error_info(self):
         """ Raw error_info field string """
         return self.robot_status["error_info"]
@@ -190,6 +68,16 @@ class VacDevice(WebackWssCtrl):
     def battery_level(self):
         """ Raw battery_level field integer """
         return int(self.robot_status["battery_level"])
+
+    @property
+    def fan_status(self):
+        """ Raw fan_status field string """
+        return self.robot_status["fan_status"]
+
+    @property
+    def mop_status(self):
+        """ Raw fan_status field string """
+        return self.robot_status["water_level"]
     
     @property
     def fan_speed_list(self):
@@ -221,13 +109,6 @@ class VacDevice(WebackWssCtrl):
     # ==========================================================
     # Vacuum Entity
     # -> Method
-
-    async def update(self):
-        _LOGGER.debug("VacDevice: update")
-        if await self.update_status(self.name, self.sub_type):
-            return True
-        _LOGGER.error("VacDevice: update failed")
-        return False
 
     async def set_fan_water_speed(self, speed):
         """ User for set both : fan speed and water level"""

@@ -1,6 +1,6 @@
 """Support for Weback Vaccum Robots."""
-import datetime
 import logging
+
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
 from homeassistant.components.vacuum import (STATE_CLEANING, STATE_DOCKED,
@@ -11,7 +11,7 @@ from homeassistant.components.vacuum import (STATE_CLEANING, STATE_DOCKED,
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.icon import icon_for_battery_level
 
-from . import DOMAIN, SCAN_INTERVAL, VacDevice
+from . import DOMAIN, VacDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,11 +55,12 @@ SERVICE_CLEAN_RECTANGLE = 'clean_rectangle'
 ATTR_RECTANGLE = "rectangle"
 
 
-async def async_setup_platform(hass, async_add_entities):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Weback robot vacuums."""
     vacuums = []
     for device in hass.data[DOMAIN]:
-        vacuums.append(WebackVacuumRobot(device, SCAN_INTERVAL))
+        vacuums.append(WebackVacuumRobot(device))
+        hass.loop.create_task(device.watch_state())
     
     platform = entity_platform.current_platform.get()
     platform.async_register_entity_service(
@@ -77,16 +78,17 @@ async def async_setup_platform(hass, async_add_entities):
     )
     
     _LOGGER.debug("Adding Weback Vacuums to Home Assistant: %s", vacuums)
-    async_add_entities(vacuums, True)
+    async_add_entities(vacuums, False)
 
 
 class WebackVacuumRobot(StateVacuumEntity):
     """
     Weback Vacuum
     """
-    def __init__(self, device: VacDevice, scan_interval: datetime.timedelta):
+    def __init__(self, device: VacDevice):
         """Initialize the Weback Vacuum."""
         self.device = device
+        self.device.subscribe(lambda vacdevice: self.schedule_update_ha_state(False))
         self._error = None
         self._attr_supported_features = (
                 VacuumEntityFeature.TURN_ON
@@ -104,17 +106,10 @@ class WebackVacuumRobot(StateVacuumEntity):
         )
         _LOGGER.info(f"Vacuum initialized: {self.name}")
 
-    async def async_update(self):
-        """Update device's state"""
-        _LOGGER.debug("Vacuum: async_update requested")
-        await self.device.update()
-        _LOGGER.debug("Vacuum: async_update done!")
-        return
-
     @property
     def should_poll(self) -> bool:
-        _LOGGER.debug("Vacuum: should_poll -> True")
-        return True
+        """Async update should_poll set to False"""
+        return False
 
     # ==========================================================
     # Vacuum Entity
@@ -124,15 +119,6 @@ class WebackVacuumRobot(StateVacuumEntity):
     def name(self):
         """Return the name of the device."""
         return self.device.nickname
-
-    # @property
-    # def device_info(self):
-    #     """Return the device info."""
-    #     return {
-    #         "identifiers": "",
-    #         "name": "",
-    #         "manufacturer": ""
-    #     }
 
     @property
     def available(self):
@@ -167,8 +153,15 @@ class WebackVacuumRobot(StateVacuumEntity):
     @property
     def fan_speed(self):
         """Return the fan speed of the vacuum cleaner."""
-        _LOGGER.debug(f"Vacuum: fan_speed={self.device.fan_status}")
-        return self.device.fan_status
+        # Check if robot is in Vacuum/Mop mode
+        if self.device.vacuum_or_mop == 1:
+            # Vacuum mode
+            _LOGGER.debug(f"Vacuum: (vacuum mode) fan_speed={self.device.fan_status}")
+            return self.device.fan_status
+        else:
+            # Mop mode
+            _LOGGER.debug(f"Vacuum: (mop mode) fan_speed={self.device.mop_status}")
+            return self.device.mop_status
 
     @property
     def fan_speed_list(self):
@@ -191,7 +184,6 @@ class WebackVacuumRobot(StateVacuumEntity):
     @property
     def unique_id(self) -> str:
         """Return an unique ID."""
-        _LOGGER.debug(f"Vacuum: unique_id={self.device.name}")
         return self.device.name
     
     @property
@@ -208,7 +200,12 @@ class WebackVacuumRobot(StateVacuumEntity):
     @property
     def extra_state_attributes(self) -> dict:
         """Return the device-specific state attributes of this vacuum."""
+        if self.device.vacuum_or_mop == 1:
+            mode = "vacuum"
+        else:
+            mode = "mop"
         return {
+            "robot mode": mode,
             "clean area": round(self.device.robot_status['clean_area'], 1),
             "clean time": round(self.device.robot_status['clean_time'] / 60, 0),
             "volume": self.device.robot_status['volume'],
@@ -216,16 +213,6 @@ class WebackVacuumRobot(StateVacuumEntity):
             "undisturb mode": self.device.robot_status['undisturb_mode'],
         }
 
-    @property
-    def device_state_attributes(self):
-        """Return the device-specific state attributes of this vacuum."""
-        return {
-            "clean area": round(self.device.robot_status['clean_area'], 1),
-            "clean time": round(self.device.robot_status['clean_time'] / 60, 0),
-            "volume": self.device.robot_status['volume'],
-            "voice": self.device.robot_status['voice_switch'],
-            "undisturb mode": self.device.robot_status['undisturb_mode'],
-        }
 
     # ==========================================================
     # Vacuum Entity
@@ -245,31 +232,30 @@ class WebackVacuumRobot(StateVacuumEntity):
         """Turn the vacuum on and start cleaning."""
         _LOGGER.debug("Vacuum: turn_on")
         await self.device.turn_on()
-        return
 
     async def async_start(self, **kwargs):
         """Turn the vacuum on and start cleaning."""
         _LOGGER.debug("Vacuum: async_start")
         await self.device.turn_on()
-        return
+
+    async def async_stop(self, **kwargs):
+        """Stop the vacuum cleaner."""
+        await self.device.return_to_base()
 
     async def async_turn_off(self, **kwargs):
         """Turn the vacuum off stopping the cleaning and returning home."""
         _LOGGER.debug("Vacuum: async_turn_off")
         self.return_to_base()
-        return
 
     async def async_return_to_base(self, **kwargs):
         """Set the vacuum cleaner to return to the dock."""
         _LOGGER.debug("Vacuum: return_to_base")
         await self.device.return_to_base()
-        return
 
     async def async_pause(self):
         """Pause the vacuum cleaner, do not return to base."""
         _LOGGER.debug("Vacuum: pause")
         await self.device.pause()
-        return
 
     async def async_locate(self, **kwargs) -> None:
         """Locate the vacuum cleaner."""
@@ -281,28 +267,23 @@ class WebackVacuumRobot(StateVacuumEntity):
         """Set fan speed"""
         _LOGGER.debug(f"Vacuum: set_fan_speed (speed={fan_speed})")
         await self.device.set_fan_water_speed(fan_speed)
-        return
 
     async def async_clean_spot(self, **kwargs):
         """Perform a spot clean-up."""
         _LOGGER.debug("Vacuum: clean_spot")
         await self.device.clean_spot()
-        return
     
     async def async_goto_location(self, point: str):
         """Ask vacuum go to location point"""
         _LOGGER.debug(f"Vacuum: goto_location (point={point})")
         await self.device.goto(point)
-        return
-    
+
     async def async_clean_rectangle(self, rectangle: str):
         """Perform a rectangle defined clean-up."""
         _LOGGER.debug(f"Vacuum: clean_rectangle (rectangle={rectangle})")
         await self.device.clean_rect(rectangle)
-        return
 
     async def async_send_command(self, command, params=None, **kwargs):
         """Send a command to a vacuum cleaner."""
         _LOGGER.debug(f"Vacuum: send_command (command={command} / params={params} / kwargs={kwargs})")
         await self.device.send_command(self.name, self.sub, params)
-        return
