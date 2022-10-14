@@ -40,7 +40,8 @@ STATE_MAPPING = {
     VacDevice.CLEAN_MODE_STOP: STATE_PAUSED,
     
     # STATE_IDLE
-    VacDevice.CHARGE_MODE_IDLE: STATE_IDLE,
+    VacDevice.IDLE_MODE: STATE_IDLE,
+    VacDevice.IDLE_MODE_HIBERNATING: STATE_IDLE,
     
     # STATE_RETURNING
     VacDevice.CHARGE_MODE_RETURNING: STATE_RETURNING,
@@ -205,12 +206,13 @@ class WebackVacuumRobot(StateVacuumEntity):
         else:
             mode = "mop"
         return {
-            "robot mode": mode,
-            "clean area": round(self.device.robot_status['clean_area'], 1),
-            "clean time": round(self.device.robot_status['clean_time'] / 60, 0),
+            "robot_mode": mode,
+            "error_info": self.device.error_info,
+            "clean_area": round(self.device.robot_status['clean_area'], 1),
+            "clean_time": round(self.device.robot_status['clean_time'] / 60, 0),
             "volume": self.device.robot_status['volume'],
             "voice": self.device.robot_status['voice_switch'],
-            "undisturb mode": self.device.robot_status['undisturb_mode'],
+            "undisturb_mode": self.device.robot_status['undisturb_mode'],
         }
 
 

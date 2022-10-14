@@ -250,7 +250,8 @@ class WebackWssCtrl:
     CHARGE_MODE_CHARGE_DONE = 'ChargeDone'
 
     # Idle state
-    CHARGE_MODE_IDLE = 'Hibernating'
+    IDLE_MODE_HIBERNATING = 'Hibernating'
+    IDLE_MODE = "Idle"
 
     # Standby/Paused state
     CLEAN_MODE_STOP = 'Standby'
@@ -374,6 +375,7 @@ class WebackWssCtrl:
         self.wst = None
         self.ws = None
         self._refresh_time = 60
+        self.sent_counter = 0
 
     async def open_wss_thread(self):
         """
@@ -447,6 +449,7 @@ class WebackWssCtrl:
     
     def on_message(self, ws, message):
         """Socket "On_Message" event"""
+        self.sent_counter = 0
         wss_data = json.loads(message)
         _LOGGER.debug(f"WebackApi (WSS) Msg received {wss_data}")
         if wss_data["notify_info"] == ROBOT_UPDATE:
@@ -470,10 +473,20 @@ class WebackWssCtrl:
         """
         json_message = json.dumps(dict_message)
         _LOGGER.debug(f"WebackApi (WSS) Publishing message : {json_message}")
+
+        if self.sent_counter >= 5:
+            # Server do not answer (maybe other app are open ???) re-start WSS connexion
+            _LOGGER.warning(f"WebackApi (WSS) Link is UP, but server has stoped answering request. "
+                            f"Maybe other WeBack app are opened ? (re-open it...)")
+            self.ws.close()
+
+        if self.socket_state != SOCK_OPEN:
+            await self.connect_wss()
         
         if self.socket_state == SOCK_OPEN:
             try:
                 self.ws.send(json_message)
+                self.sent_counter += 1
                 _LOGGER.debug(f"WebackApi (WSS) Msg published OK")
                 return True
             except websocket.WebSocketConnectionClosedException as e:
@@ -497,6 +510,7 @@ class WebackWssCtrl:
             },
             "thing_name": thing_name,
         }
+        self._refresh_time = 5
         await self.publish_wss(payload)
         await self.force_cmd_refresh(thing_name, sub_type)
         return
@@ -539,6 +553,10 @@ class WebackWssCtrl:
 
                 _LOGGER.debug("WebackApi (WSS) Refreshing...")
                 await self.update_status(thing_name, sub_type)
+                
+                # Close WSS link if we don't need it anymore
+                if self._refresh_time == 120:
+                    self.ws.close()
                 await asyncio.sleep(self._refresh_time)
             except:
                 _LOGGER.error("WebackApi (WSS) Error during refresh_handler")
