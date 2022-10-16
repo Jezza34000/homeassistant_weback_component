@@ -464,6 +464,11 @@ class WebackWssCtrl:
             _LOGGER.debug(f"WebackApi (WSS) MAP data received")
         else:
             _LOGGER.error(f"WebackApi (WSS) Received an unknown message from server : {wss_data}")
+
+        # Close WSS link if we don't need it anymore
+        if self._refresh_time == 120:
+            _LOGGER.debug("WebackApi (WSS) Closing WSS")
+            self.ws.close()
     
     async def publish_wss(self, dict_message):
         """
@@ -552,11 +557,6 @@ class WebackWssCtrl:
 
                 _LOGGER.debug("WebackApi (WSS) Refreshing...")
                 await self.update_status(thing_name, sub_type)
-                
-                # Close WSS link if we don't need it anymore
-                if self._refresh_time == 120:
-                    _LOGGER.debug("WebackApi (WSS) Closing WSS")
-                    self.ws.close()
                 await asyncio.sleep(self._refresh_time)
             except:
                 _LOGGER.error("WebackApi (WSS) Error during refresh_handler")
