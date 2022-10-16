@@ -22,9 +22,9 @@ SUCCESS_OK = 'success'
 AUTH_URL = "https://user.grit-cloud.com/prod/oauth"
 ROBOT_UPDATE = "thing_status_update"
 MAP_DATA = "map_data"
-N_RETRY = 5
+N_RETRY = 8
 ACK_TIMEOUT = 5
-HTTP_TIMEOUT = 15
+HTTP_TIMEOUT = 5
 
 
 class WebackApi:
@@ -197,10 +197,10 @@ class WebackApi:
         Send HTTP request
         """
         _LOGGER.debug(f"Send HTTP request Url={url} Params={params}")
-        timeout = httpx.Timeout(HTTP_TIMEOUT, connect=30.0)
-        try:
-            async with httpx.AsyncClient(timeout=timeout) as client:
-                for attempt in range(N_RETRY):
+        timeout = httpx.Timeout(HTTP_TIMEOUT, connect=15.0)
+        for attempt in range(N_RETRY):
+            try:
+                async with httpx.AsyncClient(timeout=timeout) as client:
                     r = await client.post(url, **params)
                     if r.status_code == 200:
                         # Server status OK
@@ -210,13 +210,11 @@ class WebackApi:
                     else:
                         # Server status NOK
                         _LOGGER.warning(f"WebackApi : Bad server response (status code={r.status_code}) retry... ({attempt}/{N_RETRY})")
-                else:
-                    _LOGGER.error(
-                        f"WebackApi : Bad server response after {N_RETRY} retry (status code={r.status_code})")
-                    return {"msg": "error", "details": f"bad response code={r.status_code}"}
-        except httpx.RequestError as e:
-            _LOGGER.error(f"Send HTTP exception details={e}")
-            return {"msg": "error", "details": e}
+            except httpx.RequestError as e:
+                _LOGGER.debug(f"Send HTTP exception details={e} retry... ({attempt}/{N_RETRY})")
+        else:
+            _LOGGER.error(f"WebackApi : HTTP error after {N_RETRY} retry")
+            return {"msg": "error", "details": f"Failed after {N_RETRY} retry"}
 
 
 # def null_callback(message):
@@ -476,8 +474,9 @@ class WebackWssCtrl:
 
         if self.sent_counter >= 5:
             # Server do not answer (maybe other app are open ???) re-start WSS connexion
-            _LOGGER.warning(f"WebackApi (WSS) Link is UP, but server has stoped answering request. "
+            _LOGGER.warning(f"WebackApi (WSS) Link is UP, but server has stopped answering request. "
                             f"Maybe other WeBack app are opened ? (re-open it...)")
+            self.sent_counter = 0
             self.ws.close()
 
         if self.socket_state != SOCK_OPEN:
@@ -556,6 +555,7 @@ class WebackWssCtrl:
                 
                 # Close WSS link if we don't need it anymore
                 if self._refresh_time == 120:
+                    _LOGGER.debug("WebackApi (WSS) Closing WSS")
                     self.ws.close()
                 await asyncio.sleep(self._refresh_time)
             except:
