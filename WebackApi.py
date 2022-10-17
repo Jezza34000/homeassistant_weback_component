@@ -467,7 +467,7 @@ class WebackWssCtrl:
 
         # Close WSS link if we don't need it anymore
         if self._refresh_time == 120:
-            _LOGGER.debug("WebackApi (WSS) Closing WSS")
+            _LOGGER.debug("WebackApi (WSS) Closing WSS...")
             self.ws.close()
     
     async def publish_wss(self, dict_message):
