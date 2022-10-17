@@ -13,7 +13,7 @@ import websocket
 _LOGGER = logging.getLogger(__name__)
 
 # Socket
-SOCK_OPEN = "Open"
+SOCK_CONNECTED = "Open"
 SOCK_CLOSE = "Close"
 SOCK_ERROR = "Error"
 SUCCESS_OK = 'success'
@@ -408,7 +408,7 @@ class WebackWssCtrl:
             return False
         
     async def connect_wss(self):
-        if self.socket_state == SOCK_OPEN:
+        if self.socket_state == SOCK_CONNECTED:
             return True
 
         _LOGGER.debug(f"WebackApi (WSS) Not connected, connecting...")
@@ -420,7 +420,7 @@ class WebackWssCtrl:
 
         for i in range(15):
             logging.debug(f"WebackApi (WSS) awaiting connexion established... {i}")
-            if self.socket_state == SOCK_OPEN:
+            if self.socket_state == SOCK_CONNECTED:
                 return True
             time.sleep(0.5)
         return False
@@ -443,7 +443,7 @@ class WebackWssCtrl:
     def on_open(self, ws):
         """Socket "On_Open" event"""
         _LOGGER.debug(f"WebackApi (WSS) Connexion established OK")
-        self.socket_state = SOCK_OPEN
+        self.socket_state = SOCK_CONNECTED
     
     def on_message(self, ws, message):
         """Socket "On_Message" event"""
@@ -484,10 +484,10 @@ class WebackWssCtrl:
             self.sent_counter = 0
             self.ws.close()
 
-        if self.socket_state != SOCK_OPEN:
+        if self.socket_state != SOCK_CONNECTED:
             await self.connect_wss()
         
-        if self.socket_state == SOCK_OPEN:
+        if self.socket_state == SOCK_CONNECTED:
             try:
                 self.ws.send(json_message)
                 self.sent_counter += 1
@@ -552,10 +552,13 @@ class WebackWssCtrl:
         _LOGGER.debug("WebackApi (WSS) Start refresh_handler")
         while True:
             try:
-                if self.socket_state != SOCK_OPEN:
+                # if not self.wst.is_alive():
+                #     _LOGGER.debug(f"WebackApi (WSS) Thread NOT ALIVE... (state socket = {self.socket_state})")
+
+                if self.socket_state != SOCK_CONNECTED:
                     await self.connect_wss()
 
-                _LOGGER.debug("WebackApi (WSS) Refreshing...")
+                _LOGGER.debug(f"WebackApi (WSS) Refreshing... (state socket = {self.socket_state})")
                 await self.update_status(thing_name, sub_type)
                 await asyncio.sleep(self._refresh_time)
             except:
