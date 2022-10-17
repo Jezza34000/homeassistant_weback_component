@@ -437,7 +437,7 @@ class WebackWssCtrl:
         """Socket "On_Close" event"""
         # if close_status_code or close_msg:
         #     details = f"(details : {close_status_code} / {close_msg})"
-        # _LOGGER.debug(f"WebackApi (WSS) Closed {details}")
+        _LOGGER.debug(f"WebackApi (WSS) Closed")
         self.socket_state = SOCK_CLOSE
     
     def on_open(self, ws):
@@ -484,20 +484,21 @@ class WebackWssCtrl:
             self.sent_counter = 0
             self.ws.close()
 
-        if self.socket_state != SOCK_CONNECTED:
-            await self.connect_wss()
-        
-        if self.socket_state == SOCK_CONNECTED:
-            try:
-                self.ws.send(json_message)
-                self.sent_counter += 1
-                _LOGGER.debug(f"WebackApi (WSS) Msg published OK")
-                return True
-            except websocket.WebSocketConnectionClosedException as e:
-                _LOGGER.debug(f"WebackApi (WSS) Error while publishing message (details: {e})")
-                self.socket_state = SOCK_CLOSE
+        for attempt in range(N_RETRY):
+            if self.socket_state == SOCK_CONNECTED:
+                try:
+                    self.ws.send(json_message)
+                    self.sent_counter += 1
+                    _LOGGER.debug(f"WebackApi (WSS) Msg published OK")
+                    return True
+                except websocket.WebSocketConnectionClosedException as e:
+                    self.socket_state = SOCK_CLOSE
+                    _LOGGER.debug(f"WebackApi (WSS) Error while publishing message (details: {e})")
+            else:
+                _LOGGER.debug(f"WebackApi (WSS) Can't publish message socket_state={self.socket_state}, reconnecting...")
+                await self.connect_wss()
         else:
-            _LOGGER.debug(f"WebackApi (WSS) Error while publishing message. Socket_state={self.socket_state}")
+            _LOGGER.error(f"WebackApi (WSS) Failed to puslish message after {N_RETRY} retry")
         return False
     
     async def send_command(self, thing_name, sub_type, working_payload):
@@ -552,13 +553,10 @@ class WebackWssCtrl:
         _LOGGER.debug("WebackApi (WSS) Start refresh_handler")
         while True:
             try:
-                # if not self.wst.is_alive():
-                #     _LOGGER.debug(f"WebackApi (WSS) Thread NOT ALIVE... (state socket = {self.socket_state})")
-
                 if self.socket_state != SOCK_CONNECTED:
                     await self.connect_wss()
 
-                _LOGGER.debug(f"WebackApi (WSS) Refreshing... (state socket = {self.socket_state})")
+                _LOGGER.debug(f"WebackApi (WSS) Refreshing...")
                 await self.update_status(thing_name, sub_type)
                 await asyncio.sleep(self._refresh_time)
             except:
