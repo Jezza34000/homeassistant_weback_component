@@ -16,7 +16,11 @@ _LOGGER = logging.getLogger(__name__)
 SOCK_CONNECTED = "Open"
 SOCK_CLOSE = "Close"
 SOCK_ERROR = "Error"
+# API Answer
 SUCCESS_OK = 'success'
+SERVICE_ERROR = 'ServiceErrorException'
+USER_NOT_EXIST = 'UserNotExist'
+PASSWORD_NOK = 'PasswordInvalid'
 
 # API
 AUTH_URL = "https://user.grit-cloud.com/prod/oauth"
@@ -95,9 +99,22 @@ class WebackApi:
 
             self.save_token_file()
             return True
+        elif resp['msg'] == SERVICE_ERROR:
+            # Wrong APP
+            _LOGGER.error(f"WebackApi login failed, application is not recognized, "
+                          f"try to change 'application' field (this field is case sensitive) in your configuration.yaml")
+            return False
+        elif resp['msg'] == USER_NOT_EXIST:
+            # User NOK
+            _LOGGER.error(f"WebackApi login failed, user does not exist, check you login and you area code ?")
+            return False
+        elif resp['msg'] == PASSWORD_NOK:
+            # Password NOK
+            _LOGGER.error(f"WebackApi login failed, wrong password")
+            return False
         else:
             # Login NOK
-            _LOGGER.error(f"WebackApi login failed (details : {resp})")
+            _LOGGER.error(f"WebackApi can't login (reason is : {resp['msg']})")
             return False
 
     def verify_cached_creds(self):
@@ -390,8 +407,9 @@ class WebackWssCtrl:
                                              on_message=self.on_message,
                                              on_close=self.on_close,
                                              on_open=self.on_open,
-                                             on_error=self.on_error)
-            
+                                             on_error=self.on_error,
+                                             on_pong=self.on_pong)
+
             self.wst = threading.Thread(target=self.ws.run_forever)
             self.wst.start()
             
@@ -427,18 +445,23 @@ class WebackWssCtrl:
     
     def on_error(self, ws, error):
         """Socket "On_Error" event"""
-        # if error:
-        #     details = f"(details : {error})"
-        # _LOGGER.debug(f"WebackApi (WSS) Error {details}")
-        # ws.close()
+        details = ""
+        if error:
+            details = f"(details : {error})"
+        _LOGGER.debug(f"WebackApi (WSS) Error {details}")
         self.socket_state = SOCK_ERROR
 
     def on_close(self, ws, close_status_code, close_msg):
         """Socket "On_Close" event"""
-        # if close_status_code or close_msg:
-        #     details = f"(details : {close_status_code} / {close_msg})"
         _LOGGER.debug(f"WebackApi (WSS) Closed")
+
+        if close_status_code or close_msg:
+            _LOGGER.debug("WebackApi (WSS) Close Status_code: " + str(close_status_code))
+            _LOGGER.debug("WebackApi (WSS) Close Message: " + str(close_msg))
         self.socket_state = SOCK_CLOSE
+
+    def on_pong(self, message):
+        _LOGGER.debug("WebackApi (WSS) Got a Pong")
     
     def on_open(self, ws):
         """Socket "On_Open" event"""
@@ -465,10 +488,11 @@ class WebackWssCtrl:
         else:
             _LOGGER.error(f"WebackApi (WSS) Received an unknown message from server : {wss_data}")
 
-        # Close WSS link if we don't need it anymore
+        # Close WSS link if we don't need it anymore or it will get closed by remote side
         if self._refresh_time == 120:
             _LOGGER.debug("WebackApi (WSS) Closing WSS...")
             self.ws.close()
+            self.socket_state = SOCK_CLOSE
     
     async def publish_wss(self, dict_message):
         """
@@ -483,6 +507,7 @@ class WebackWssCtrl:
                             f"Maybe other WeBack app are opened ? (re-open it...)")
             self.sent_counter = 0
             self.ws.close()
+            self.socket_state = SOCK_CLOSE
 
         for attempt in range(N_RETRY):
             if self.socket_state == SOCK_CONNECTED:
@@ -559,9 +584,8 @@ class WebackWssCtrl:
                 _LOGGER.debug(f"WebackApi (WSS) Refreshing...")
                 await self.update_status(thing_name, sub_type)
                 await asyncio.sleep(self._refresh_time)
-            except:
-                _LOGGER.error("WebackApi (WSS) Error during refresh_handler")
-                break
+            except Exception as e:
+                _LOGGER.error(f"WebackApi (WSS) Error during refresh_handler (details={e})")
 
     def subscribe(self, subscriber):
         _LOGGER.debug("WebackApi (WSS): adding a new subscriber")
