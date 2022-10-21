@@ -201,19 +201,33 @@ class WebackVacuumRobot(StateVacuumEntity):
     @property
     def extra_state_attributes(self) -> dict:
         """Return the device-specific state attributes of this vacuum."""
+
         if self.device.vacuum_or_mop == 1:
             mode = "vacuum"
         else:
             mode = "mop"
-        return {
+
+        extra_value = {
             "robot_mode": mode,
             "error_info": self.device.error_info,
-            "clean_area": round(self.device.robot_status['clean_area'], 1),
-            "clean_time": round(self.device.robot_status['clean_time'] / 60, 0),
             "volume": self.device.robot_status['volume'],
             "voice": self.device.robot_status['voice_switch'],
             "undisturb_mode": self.device.robot_status['undisturb_mode'],
         }
+
+        if 'clean_area' in self.device.robot_status:
+            clean_area = self.device.robot_status['clean_area']
+            if clean_area is None:
+                clean_area = 0
+            extra_value['clean_area'] = round(clean_area, 1)
+
+        if 'clean_time' in self.device.robot_status:
+            clean_time = self.device.robot_status['clean_time']
+            if clean_time is None:
+                clean_time = 0
+            extra_value['clean_time'] = round(clean_time / 60, 0),
+
+        return extra_value
 
 
     # ==========================================================

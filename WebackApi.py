@@ -440,7 +440,7 @@ class WebackWssCtrl:
             logging.debug(f"WebackApi (WSS) awaiting connexion established... {i}")
             if self.socket_state == SOCK_CONNECTED:
                 return True
-            time.sleep(0.5)
+            await asyncio.sleep(0.5)
         return False
     
     def on_error(self, ws, error):
