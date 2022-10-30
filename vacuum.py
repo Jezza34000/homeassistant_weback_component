@@ -224,10 +224,16 @@ class WebackVacuumRobot(StateVacuumEntity):
         extra_value = {
             "robot_mode": mode,
             "error_info": self.device.error_info,
-            "volume": self.device.robot_status['volume'],
-            "voice": self.device.robot_status['voice_switch'],
-            "undisturb_mode": self.device.robot_status['undisturb_mode'],
         }
+
+        if 'volume' in self.device.robot_status:
+            extra_value['volume'] = self.device.robot_status['volume']
+            
+        if 'voice' in self.device.robot_status:
+            extra_value['voice'] = self.device.robot_status['voice']
+            
+        if 'undisturb_mode' in self.device.robot_status:
+            extra_value['undisturb_mode'] = self.device.robot_status['undisturb_mode']
 
         if 'clean_area' in self.device.robot_status:
             clean_area = self.device.robot_status['clean_area']
