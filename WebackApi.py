@@ -296,6 +296,7 @@ class WebackWssCtrl:
         MOP_SPEED_HIGH
     }
 
+    NO_FAN_NO_MOP = 0
     VACUUM_ON = 1
     MOP_ON = 2
 

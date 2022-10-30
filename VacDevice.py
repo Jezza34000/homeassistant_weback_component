@@ -102,9 +102,11 @@ class VacDevice(WebackWssCtrl):
     @property
     def vacuum_or_mop(self) -> int:
         """ Find if the robot is in vacuum or mop mode """
-        if self.robot_status['fan_status'] == self.FAN_DISABLED and self.robot_status['water_level'] != self.MOP_DISABLED:
-            return self.MOP_ON
-        return self.VACUUM_ON
+        if 'fan_status' and 'water_level' in self.robot_status:
+            if self.robot_status['fan_status'] == self.FAN_DISABLED and self.robot_status['water_level'] != self.MOP_DISABLED:
+                return self.MOP_ON
+            return self.VACUUM_ON
+        return self.NO_FAN_NO_MOP
 
     # ==========================================================
     # Vacuum Entity

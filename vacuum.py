@@ -91,7 +91,8 @@ class WebackVacuumRobot(StateVacuumEntity):
         self.device = device
         self.device.subscribe(lambda vacdevice: self.schedule_update_ha_state(False))
         self._error = None
-        self._attr_supported_features = (
+
+        BASE_FEATURES = (
                 VacuumEntityFeature.TURN_ON
                 | VacuumEntityFeature.TURN_OFF
                 | VacuumEntityFeature.STATUS
@@ -99,12 +100,17 @@ class WebackVacuumRobot(StateVacuumEntity):
                 | VacuumEntityFeature.PAUSE
                 | VacuumEntityFeature.STOP
                 | VacuumEntityFeature.RETURN_HOME
-                | VacuumEntityFeature.FAN_SPEED
                 | VacuumEntityFeature.CLEAN_SPOT
                 | VacuumEntityFeature.LOCATE
                 | VacuumEntityFeature.START
                 | VacuumEntityFeature.SEND_COMMAND
         )
+
+        if self.device.vacuum_or_mop != 0:
+            _LOGGER.debug(f"Add fan_speed features for this robot")
+            supported_features = BASE_FEATURES | VacuumEntityFeature.FAN_SPEED
+
+        self._attr_supported_features = supported_features
         _LOGGER.info(f"Vacuum initialized: {self.name}")
 
     @property
@@ -159,10 +165,14 @@ class WebackVacuumRobot(StateVacuumEntity):
             # Vacuum mode
             _LOGGER.debug(f"Vacuum: (vacuum mode) fan_speed={self.device.fan_status}")
             return self.device.fan_status
-        else:
+        elif self.device.vacuum_or_mop == 2:
             # Mop mode
             _LOGGER.debug(f"Vacuum: (mop mode) fan_speed={self.device.mop_status}")
             return self.device.mop_status
+        else:
+            # No Mop / No Fan
+            _LOGGER.debug(f"Vacuum: no Fan / no Mop")
+            return None
 
     @property
     def fan_speed_list(self):
@@ -172,10 +182,14 @@ class WebackVacuumRobot(StateVacuumEntity):
             # Vacuum mode
             _LOGGER.debug(f"Vacuum: (vacuum mode) fan_speed_list={self.device.fan_speed_list}")
             return self.device.fan_speed_list
-        else:
+        elif self.device.vacuum_or_mop == 2:
             # Mop mode
             _LOGGER.debug(f"Vacuum: (mop mode) fan_speed_list={self.device.mop_level_list}")
             return self.device.mop_level_list
+        else:
+            # No Mop / No Fan
+            _LOGGER.debug(f"Vacuum: no Fan / no Mop fan_speed_list=None")
+            return None
 
     @property
     def error(self):
