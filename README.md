@@ -5,7 +5,12 @@ Who using WeBack or Tesvor apps.
 
 ## Installation
 
-Copy this repository inside your `custom_components` Home Assistant's folder
+Go to Home Assistant > HACS > Integrations > Click on tree dot (on top right corner) > Custom repositories \
+and fill :
+* **Repository** :  `Jezza34000/homeassistant_weback_component'
+* **Category** : Inregration
+
+Click on ADD
 
 ## Configuration
 
