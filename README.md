@@ -1,6 +1,9 @@
 # Weback/Tesvor component for HomeAssistant
 
-Home Assistant component for controling robot from brand like : Neatsvor / Tesvor / Orfeld / Abir / ...
+[![](https://img.shields.io/github/release/Jezza34000/homeassistant_weback_component/all.svg?style=for-the-badge)](https://github.com/Jezza34000/homeassistant_weback_component)
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=for-the-badge)](https://github.com/hacs/integration)
+
+Home Assistant component for controling robot from brand like : Neatsvor / Tesvor / Orfeld / Abir...
 Who using WeBack or Tesvor apps.
 
 ## Installation
