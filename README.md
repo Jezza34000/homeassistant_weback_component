@@ -13,7 +13,7 @@ and fill :
 * **Repository** :  `Jezza34000/homeassistant_weback_component`
 * **Category** : `Integration`
 
-Click on ADD
+Click on `ADD`, restart HA.
 
 ## Configuration
 
@@ -36,5 +36,22 @@ weback_vacuum:
 **application** : if you use "WeBack" do not try to change this field.  \
 **client_id**, **api_version**, **language**: seems to have no effect. Do not use it.
 
+> **Warning** : Some user are expericing problem with the use of sharing option in WeBack's app. I recommand to not use this option and remove shared account to ensure a proper working
 
-Once set you can restart Home Assitant.
+Once set you can restart Home Assistant.
+
+## Important : API change since 2022
+
+If you have bought and create your robot account prior to 2022 it's possible you are still registered on the old API system, and you account will have problem or not work. \
+if you concerned, to ensure proper working, please follow thoses steps: \
+Go to WeBack app :
+* Remove you robot from account
+* Logout from account
+* Remove your account
+* Create a new account
+* Add your robot to your new account
+
+
+
+
+
