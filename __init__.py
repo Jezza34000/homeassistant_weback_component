@@ -56,7 +56,6 @@ async def async_setup(hass, config):
         config[DOMAIN].get(CONF_CLIENT_ID),
         config[DOMAIN].get(CONF_API_VERSION),
     )
-
     _LOGGER.debug("Weback vacuum robots: login started")
 
     # Login into Weback server's
