@@ -1,6 +1,8 @@
 {
     "domain": "weback_vacuum",
-    "name": "WeBack Vacuum",
+    "name": "WeBack/Tesvor Vacuum",
+    "documentation": "https://github.com/Jezza34000/homeassistant_weback_component/blob/main/README.md",
+    "issue_tracker": "https://github.com/Jezza34000/homeassistant_weback_component/issues",
     "requirements": [
     ],
     "codeowners": [
