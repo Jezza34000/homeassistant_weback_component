@@ -50,11 +50,6 @@ STATE_MAPPING = {
     VacDevice.ROBOT_ERROR: STATE_ERROR,
 }
 
-SERVICE_GOTO_LOCATION = 'go_to_location'
-ATTR_POINT = "point"
-SERVICE_CLEAN_RECTANGLE = 'clean_rectangle'
-ATTR_RECTANGLE = "rectangle"
-
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Weback robot vacuums."""
@@ -62,21 +57,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     for device in hass.data[DOMAIN]:
         vacuums.append(WebackVacuumRobot(device))
         hass.loop.create_task(device.watch_state())
-    
-    platform = entity_platform.current_platform.get()
-    platform.async_register_entity_service(
-        SERVICE_GOTO_LOCATION,
-        {
-            vol.Required(ATTR_POINT): cv.string,
-        }, "async_goto_location"
-    )
-    
-    platform.async_register_entity_service(
-        SERVICE_CLEAN_RECTANGLE,
-        {
-            vol.Required(ATTR_RECTANGLE): cv.string,
-        }, "async_clean_rectangle"
-    )
     
     _LOGGER.debug("Adding Weback Vacuums to Home Assistant: %s", vacuums)
     async_add_entities(vacuums, False)
