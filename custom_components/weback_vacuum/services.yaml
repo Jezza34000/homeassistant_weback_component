@@ -8,14 +8,3 @@ go_to_location:
       name: Destination point
       description: Point in format [x,y]
       required: true
-
-clean_rectangle:
-  name: Clean rectangle
-  description: Commands the robot to clean the given rectangular area.
-  target:
-    integration: vacuum
-  fields:
-    rectangle:
-      name: Destination rectangle
-      description: Rectangle in format [x1,y1,x2,y2]
-      required: true

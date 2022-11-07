@@ -9,6 +9,6 @@
       "@Jezza34000"
     ],
     "config_flow": false,
-    "iot_class": "Cloud Polling",
+    "iot_class": "cloud_polling",
     "version": "1.0"
   }
