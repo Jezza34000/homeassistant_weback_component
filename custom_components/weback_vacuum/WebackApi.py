@@ -155,12 +155,13 @@ class WebackApi:
         """
         try:
             config = configparser.ConfigParser()
+            config.add_section('weback_token')
             config.set('weback_token', 'jwt_token', self.jwt_token)
             config.set('weback_token', 'token_exp', self.token_exp)
             config.set('weback_token', 'api_url', self.api_url)
             config.set('weback_token', 'wss_url', self.wss_url)
             config.set('weback_token', 'region_name', self.region_name)
-            with open('weback_creds', 'wb') as configfile:
+            with open('weback_creds', 'w') as configfile:
                 config.write(configfile)
             _LOGGER.debug(f"WebackApi saved new creds")
         except:
