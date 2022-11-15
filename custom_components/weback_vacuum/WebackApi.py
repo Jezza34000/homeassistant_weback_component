@@ -394,6 +394,9 @@ class WebackWssCtrl(WebackApi):
         self.ws = None
         self._refresh_time = 60
         self.sent_counter = 0
+        
+        # Reloading cached creds
+        self.verify_cached_creds()
 
     async def check_credentials(self):
         """
