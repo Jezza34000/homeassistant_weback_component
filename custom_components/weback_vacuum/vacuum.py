@@ -72,7 +72,7 @@ class WebackVacuumRobot(StateVacuumEntity):
         self.device.subscribe(lambda vacdevice: self.schedule_update_ha_state(False))
         self._error = None
 
-        BASE_FEATURES = (
+        self._attr_supported_features = (
                 VacuumEntityFeature.TURN_ON
                 | VacuumEntityFeature.TURN_OFF
                 | VacuumEntityFeature.STATUS
@@ -84,13 +84,8 @@ class WebackVacuumRobot(StateVacuumEntity):
                 | VacuumEntityFeature.LOCATE
                 | VacuumEntityFeature.START
                 | VacuumEntityFeature.SEND_COMMAND
+                | VacuumEntityFeature.FAN_SPEED
         )
-
-        if self.device.vacuum_or_mop != 0:
-            _LOGGER.debug(f"Add fan_speed features for this robot")
-            supported_features = BASE_FEATURES | VacuumEntityFeature.FAN_SPEED
-
-        self._attr_supported_features = supported_features
         _LOGGER.info(f"Vacuum initialized: {self.name}")
 
     @property
@@ -109,7 +104,7 @@ class WebackVacuumRobot(StateVacuumEntity):
 
     @property
     def available(self):
-        _LOGGER.debug("Vacuum: available", self.device.is_available)
+        _LOGGER.debug(f"Vacuum: available={self.device.is_available}")
         """Returns true if vacuum is online"""
         return self.device.is_available
 

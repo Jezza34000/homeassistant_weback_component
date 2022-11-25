@@ -79,9 +79,14 @@ async def async_setup(hass, config):
                                   robot["thing_nickname"],
                                   robot["sub_type"],
                                   robot["thing_status"],
-                                  weback_api.wss_url,
-                                  weback_api.region_name,
-                                  weback_api.jwt_token)
+                                  config[DOMAIN].get(CONF_USERNAME),
+                                  config[DOMAIN].get(CONF_PASSWORD),
+                                  config[DOMAIN].get(CONF_REGION),
+                                  config[DOMAIN].get(CONF_LANGUAGE),
+                                  config[DOMAIN].get(CONF_APP),
+                                  config[DOMAIN].get(CONF_CLIENT_ID),
+                                  config[DOMAIN].get(CONF_API_VERSION),
+                                  )
         hass.data[DOMAIN].append(vacuum_device)
 
     if hass.data[DOMAIN]:

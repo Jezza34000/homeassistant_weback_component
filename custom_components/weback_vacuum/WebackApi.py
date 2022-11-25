@@ -156,26 +156,26 @@ class WebackApi:
         try:
             config = configparser.ConfigParser()
             config.add_section('weback_token')
-            config.set('weback_token', 'jwt_token', self.jwt_token)
-            config.set('weback_token', 'token_exp', self.token_exp)
-            config.set('weback_token', 'api_url', self.api_url)
-            config.set('weback_token', 'wss_url', self.wss_url)
-            config.set('weback_token', 'region_name', self.region_name)
+            config.set('weback_token', 'jwt_token', str(self.jwt_token))
+            config.set('weback_token', 'token_exp', str(self.token_exp))
+            config.set('weback_token', 'api_url', str(self.api_url))
+            config.set('weback_token', 'wss_url', str(self.wss_url))
+            config.set('weback_token', 'region_name', str(self.region_name))
             with open('weback_creds', 'w') as configfile:
                 config.write(configfile)
             _LOGGER.debug(f"WebackApi saved new creds")
-        except:
-            _LOGGER.debug(f"WebackApi failed to saved new creds")
+        except Exception as e:
+            _LOGGER.debug(f"WebackApi failed to saved new creds details={e}")
 
     @staticmethod
-    def check_token_is_valid(token: str) -> bool:
+    def check_token_is_valid(token) -> bool:
         """
         Check if token validity is still OK or not
         """
         _LOGGER.debug(f"WebackApi checking token validity : {token}")
         try:
-            now_date = datetime.today()
-            dt_token = datetime.strptime(token, "%Y-%d-%m %H:%M:%S.%f")
+            now_date = datetime.today() - timedelta(minutes=15)
+            dt_token = datetime.strptime(str(token), "%Y-%m-%d %H:%M:%S.%f")
             if now_date < dt_token:
                 _LOGGER.debug(f"WebackApi token is valid")
                 return True
@@ -239,7 +239,7 @@ class WebackApi:
 #     _LOGGER.debug(f"WebackVacuumApi (WSS) null_callback: {message}")
 
 
-class WebackWssCtrl:
+class WebackWssCtrl(WebackApi):
 
     # Clean mode
     CLEAN_MODE_AUTO = 'AutoClean'
@@ -267,7 +267,7 @@ class WebackWssCtrl:
 
     # Idle state
     IDLE_MODE_HIBERNATING = 'Hibernating'
-    IDLE_MODE = "Idle"
+    IDLE_MODE = 'Idle'
 
     # Standby/Paused state
     CLEAN_MODE_STOP = 'Standby'
@@ -302,7 +302,10 @@ class WebackWssCtrl:
     MOP_ON = 2
 
     # Error state
-    ROBOT_ERROR = "Malfunction"
+    ROBOT_ERROR = 'Malfunction'
+
+    # Unknow state
+    ROBOT_UNKNOWN = 'unknown'
 
     # Robot Error codes
     ROBOT_ERROR_NO = "NoError"
@@ -379,25 +382,45 @@ class WebackWssCtrl:
     WebSocket Weback API controller
     Handle websocket to send/receive robot control
     """
-    def __init__(self, wss_url, region_name, jwt_token):
+    def __init__(self, user, password, region, country, app, client_id, api_version):
+        super().__init__(user, password, region, country, app, client_id, api_version)
         _LOGGER.debug("WebackApi WSS Control __init__")
         self.ws = None
         self.authorization = "Basic KG51bGwpOihudWxsKQ=="
         self.socket_state = SOCK_CLOSE
-        self.jwt_token = jwt_token
-        self.region_name = region_name
-        self.wss_url = wss_url
         self.robot_status = None
         self.subscriber = []
         self.wst = None
         self.ws = None
         self._refresh_time = 60
         self.sent_counter = 0
+        
+        # Reloading cached creds
+        self.verify_cached_creds()
+
+    async def check_credentials(self):
+        """
+        Check if credentials for WSS link are OK
+        """
+        _LOGGER.debug(f"WebackApi (WSS) Checking credentials...")
+        if not self.region_name or not self.jwt_token or not self.check_token_is_valid(self.token_exp):
+            _LOGGER.debug(f"WebackApi (WSS) Credentials need renewal")
+            # Cred renewal necessary
+            if await self.login():
+                return True
+            else:
+                return False
+        _LOGGER.debug(f"WebackApi (WSS) Credentials are OK")
+        return True
 
     async def open_wss_thread(self):
         """
         Connect WebSocket to Weback Server and create a thread to maintain connexion alive
         """
+        if not await self.check_credentials():
+            _LOGGER.error(f"WebackApi (WSS) Failed to obtain WSS credentials")
+            return False
+
         _LOGGER.debug(f"WebackApi (WSS) Addr={self.wss_url} / Region={self.region_name} / Token={self.jwt_token}")
         
         try:
@@ -569,12 +592,13 @@ class WebackWssCtrl:
     def adapt_refresh_time(self, status):
         """Adapt refreshing time depending on robot status"""
         _LOGGER.debug(f"WebackApi (WSS) adapt for : {status}")
-        if status['working_status'] in self.DOCKED_STATES:
-            _LOGGER.debug("WebackApi (WSS) > Set refreshing to 120s")
-            self._refresh_time = 120
-        else:
-            _LOGGER.debug("WebackApi (WSS) > Set refreshing to 5s")
-            self._refresh_time = 5
+        if 'working_status' in status:
+            if status['working_status'] not in self.DOCKED_STATES:
+                _LOGGER.debug("WebackApi (WSS) > Set refreshing to 5s")
+                self._refresh_time = 5
+                return
+        _LOGGER.debug("WebackApi (WSS) > Set refreshing to 120s")
+        self._refresh_time = 120
     
     async def refresh_handler(self, thing_name, sub_type):
         _LOGGER.debug("WebackApi (WSS) Start refresh_handler")

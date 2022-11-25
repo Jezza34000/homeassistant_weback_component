@@ -6,9 +6,10 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class VacDevice(WebackWssCtrl):
-    def __init__(self, thing_name, thing_nickname, sub_type, thing_status, wss_url, region_name, jwt_token):
+    def __init__(self, thing_name, thing_nickname, sub_type, thing_status,
+                 user, password, region, country, app, client_id, api_version):
         _LOGGER.debug("WebackApi RobotController __init__")
-        super().__init__(wss_url, region_name, jwt_token)
+        super().__init__(user, password, region, country, app, client_id, api_version)
         self.name = thing_name
         self.nickname = thing_nickname
         self.sub_type = sub_type
@@ -33,9 +34,11 @@ class VacDevice(WebackWssCtrl):
     # -> Properties
     
     @property
-    def current_mode(self) -> str:
+    def current_mode(self):
         """ Raw working_status field string """
-        return self.robot_status['working_status']
+        if 'working_status' in self.robot_status:
+            return self.robot_status['working_status']
+        return self.IDLE_MODE
     
     @property
     def raw_status(self) -> str:
@@ -52,7 +55,9 @@ class VacDevice(WebackWssCtrl):
     @property
     def is_available(self):
         """ Boolean define if robot is connected to cloud """
-        return self.robot_status['connected'] == 'true'
+        if 'connected' in self.robot_status:
+            return self.robot_status['connected'] == 'true'
+        return False
     
     @property
     def is_charging(self):
@@ -62,22 +67,28 @@ class VacDevice(WebackWssCtrl):
     @property
     def error_info(self):
         """ Raw error_info field string """
-        return self.robot_status["error_info"]
+        if 'error_info' in self.robot_status:
+            return self.robot_status['error_info']
+        return None
     
     @property
     def battery_level(self):
         """ Raw battery_level field integer """
-        return int(self.robot_status["battery_level"])
+        if 'battery_level' in self.robot_status:
+            return int(self.robot_status['battery_level'])
+        return 0
 
     @property
     def fan_status(self):
         """ Raw fan_status field string """
-        return self.robot_status["fan_status"]
+        if 'fan_status' in self.robot_status:
+            return self.robot_status['fan_status']
 
     @property
     def mop_status(self):
         """ Raw fan_status field string """
-        return self.robot_status["water_level"]
+        if 'water_level' in self.robot_status:
+            return self.robot_status['water_level']
     
     @property
     def fan_speed_list(self):
@@ -92,12 +103,14 @@ class VacDevice(WebackWssCtrl):
     @property
     def clean_time(self):
         """Return clean time"""
-        return self.robot_status["clean_time"]
+        if 'clean_time' in self.robot_status:
+            return self.robot_status['clean_time']
 
     @property
     def clean_area(self):
         """Return clean area in square meter"""
-        return self.robot_status["clean_area"]
+        if 'clean_area' in self.robot_status:
+            return self.robot_status['clean_area']
 
     @property
     def vacuum_or_mop(self) -> int:
