@@ -1,10 +1,12 @@
-# Weback/Tesvor component for HomeAssistant
+# WeBback component for HomeAssistant
 
 [![](https://img.shields.io/github/release/Jezza34000/homeassistant_weback_component/all.svg?style=for-the-badge)](https://github.com/Jezza34000/homeassistant_weback_component)
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=for-the-badge)](https://github.com/hacs/integration)
 
 Home Assistant component for controlling robot from brand like : Neatsvor / Tesvor / Orfeld / Abir...
-Who using WeBack or Tesvor apps.
+This component can control robot using WeBack app.
+
+> Warning : Some models from marks above (such as : Tesvor M1 & Neastsvor X600 PRO) are using a different platform (SmartLife/Tuya) and can't be controlled with this integration. 
 
 ## Installation
 
