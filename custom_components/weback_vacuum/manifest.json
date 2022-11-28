@@ -4,6 +4,8 @@
     "documentation": "https://github.com/Jezza34000/homeassistant_weback_component/blob/main/README.md",
     "issue_tracker": "https://github.com/Jezza34000/homeassistant_weback_component/issues",
     "requirements": [
+        "websocket-client==1.4.2"
+
     ],
     "codeowners": [
       "@Jezza34000"
