@@ -1,4 +1,4 @@
-# WeBback component for HomeAssistant
+# WeBack component for HomeAssistant
 
 [![](https://img.shields.io/github/release/Jezza34000/homeassistant_weback_component/all.svg?style=for-the-badge)](https://github.com/Jezza34000/homeassistant_weback_component)
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=for-the-badge)](https://github.com/hacs/integration)
@@ -8,14 +8,20 @@ This component can control robot using WeBack app.
 
 > Warning : Some models from marks above (such as : Tesvor M1 & Neastsvor X600 PRO) are using a different platform (SmartLife/Tuya) and can't be controlled with this integration. 
 
-## Installation
+## Installation (with HACS)
 
-Go to Home Assistant > HACS > Integrations > Click on tree dot (on top right corner) > Custom repositories \
+1. Go to Home Assistant > HACS > Integrations > Click on tree dot (on top right corner) > Custom repositories \
 and fill :
-* **Repository** :  `Jezza34000/homeassistant_weback_component`
-* **Category** : `Integration`
+   * **Repository** :  `Jezza34000/homeassistant_weback_component`
+   * **Category** : `Integration` 
 
-Click on `ADD`, restart HA.
+2. Click on `ADD`, restart HA.
+
+## Installation (manual)
+
+1. Download last release.
+2. Unzip `weback_component` folder into your HomeAssistant : `custom_components`
+3. Restart HA
 
 ## Configuration
 
@@ -23,8 +29,8 @@ Edit your Home Assistant `configuration.yaml` and set :
 
 ``` YAML
 weback_vacuum:
-  username: <your WeBack/Tesvor email, required>
-  password: <your WeBack/Tesvor password, required>
+  username: <your WeBack email, required>
+  password: <your WeBack password, required>
   region: <your country phone code e.g. for france code is 33, required>
   application: <configuration app, optionnal>
   client_id: <api client, optionnal>
