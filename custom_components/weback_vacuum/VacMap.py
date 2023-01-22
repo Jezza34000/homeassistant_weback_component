@@ -212,7 +212,7 @@ class VacMap:
             byte = int(i * 2 / 8)
             bit = int((i * 2 / 8 % 1) * 8)
 
-            if(len(self.data["PointType"]) >= byte):
+            if(len(self.data["PointType"]) > byte):
                 value = (self.data["PointType"][byte] << bit) & 192
             else:
                 value = self.PATH_RELOCATING
