@@ -110,6 +110,16 @@ class VacMap:
             self.data["PointData"] = base64.b64decode(self.data['PointData'])
             self.data["PointType"] = base64.b64decode(self.data['PointType'])
 
+    def wss_update(self, input):
+        existing_room_data = self.data["room_zone_info"]
+
+        self.load_data(input)
+
+        for i, room in enumerate(self.data["room_zone_info"]):
+            existing_room = next(room for room in existing_room_data if room["room_id"] == self.data["room_zone_info"][i]["room_id"])
+            self.data["room_zone_info"][i]["room_name"] = existing_room["room_name"]
+
+
     def get_map_bitmap(self):
         """Parse MapData into 8-Bit lightness (grayscale) bitmap, return it as bytes"""
         self.map_bitmap = bytearray(b"")

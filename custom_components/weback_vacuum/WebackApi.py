@@ -541,7 +541,7 @@ class WebackWssCtrl(WebackApi):
                 _LOGGER.debug('No update from cloud')
         elif wss_data["notify_info"] == MAP_DATA:
             _LOGGER.debug(f"WebackApi (WSS) Map data received")
-            self.map = VacMap(wss_data['map_data'])
+            self.map.wss_update(wss_data['map_data'])
             self.render_map()
             self._call_subscriber()
         else:
