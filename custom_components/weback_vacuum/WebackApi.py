@@ -405,6 +405,10 @@ class WebackWssCtrl(WebackApi):
     RECTANGLE_INFO = "virtual_rect_info"
     SPEAKER_VOLUME = "volume"
     SELECTED_ZONE = "selected_zone"
+    PLANNING_RECT_POINT_NUM = "planning_rect_point_num"
+    PLANNING_RECT_X = "planning_rect_x"
+    PLANNING_RECT_Y = "planning_rect_y"
+    
     # Payload switches
     VOICE_SWITCH = "voice_switch"
     UNDISTURB_MODE = "undisturb_mode"
