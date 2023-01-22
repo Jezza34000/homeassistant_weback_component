@@ -74,11 +74,20 @@ class VacMapRoom:
             else:
                 r.append(list([self.data["room_point_x"][i], self.data["room_point_y"][i]]))
         return r
+    def get_room_label_offset(self):
+        bounds = self.get_room_bounds()
+
+        min_coord = min(bounds)[0], min(bounds)[1]
+        max_coord = max(bounds)[0], max(bounds)[1]
+
+        return min_coord[0] + ((max_coord[0] - min_coord[0]) / 2), min_coord[1] + ((max_coord[1] - min_coord[1]) / 2)
+
     def get_xaiomi_vacuum_map_card_rooms(self):
+        label_offset = self.get_room_label_offset()
         ret = {
             "id": self.get_room_id(),
             "outline": self.get_room_bounds(False),
-            "label": { "text": self.get_room_name(), "x": 0, "y": 0 }
+            "label": { "text": self.get_room_name(), "x": label_offset[0], "y": label_offset[1] }
         }
 
         return ret
