@@ -277,6 +277,7 @@ class WebackWssCtrl(WebackApi):
     CLEAN_MODE_EDGE_DETECT = 'EdgeDetect'
     CLEAN_MODE_SPOT = 'SpotClean'
     CLEAN_MODE_SINGLE_ROOM = 'RoomClean'
+    CLEAN_MODE_ROOMS = 'SelectClean'
     CLEAN_MODE_MOP = 'MopClean'
     CLEAN_MODE_SMART = 'SmartClean'
     CLEAN_MODE_Z = 'ZmodeClean'
@@ -386,7 +387,7 @@ class WebackWssCtrl(WebackApi):
     CLEANING_STATES = {
         DIRECTION_CONTROL, ROBOT_PLANNING_RECT, RELOCATION, CLEAN_MODE_Z, CLEAN_MODE_AUTO,
         CLEAN_MODE_EDGE, CLEAN_MODE_EDGE_DETECT, CLEAN_MODE_SPOT, CLEAN_MODE_SINGLE_ROOM,
-        CLEAN_MODE_MOP, CLEAN_MODE_SMART
+        CLEAN_MODE_ROOMS, CLEAN_MODE_MOP, CLEAN_MODE_SMART
     }
 
     CHARGING_STATES = {
@@ -403,6 +404,7 @@ class WebackWssCtrl(WebackApi):
     GOTO_POINT = "goto_point"
     RECTANGLE_INFO = "virtual_rect_info"
     SPEAKER_VOLUME = "volume"
+    SELECTED_ZONE = "selected_zone"
     # Payload switches
     VOICE_SWITCH = "voice_switch"
     UNDISTURB_MODE = "undisturb_mode"

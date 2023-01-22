@@ -22,6 +22,7 @@ STATE_MAPPING = {
     VacDevice.CLEAN_MODE_EDGE_DETECT: STATE_CLEANING,
     VacDevice.CLEAN_MODE_SPOT: STATE_CLEANING,
     VacDevice.CLEAN_MODE_SINGLE_ROOM: STATE_CLEANING,
+    VacDevice.CLEAN_MODE_ROOMS: STATE_CLEANING,
     VacDevice.CLEAN_MODE_MOP: STATE_CLEANING,
     VacDevice.CLEAN_MODE_SMART: STATE_CLEANING,
     VacDevice.ROBOT_PLANNING_LOCATION: STATE_CLEANING,
@@ -297,4 +298,7 @@ class WebackVacuumRobot(StateVacuumEntity):
     async def async_send_command(self, command, params=None, **kwargs):
         """Send a command to a vacuum cleaner."""
         _LOGGER.debug(f"Vacuum: send_command (command={command} / params={params} / kwargs={kwargs})")
-        await self.device.send_command(self.name, self.sub, params)
+        if(command == 'app_segment_clean'):
+            await self.device.clean_room(params)
+        else:
+            await self.device.send_command(self.name, self.sub, params)

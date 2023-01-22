@@ -230,3 +230,10 @@ class VacDevice(WebackWssCtrl):
         else:
             _LOGGER.error(f"Undisturb mode can't be set with value : {state}")
         return
+
+    async def clean_room(self, room_ids: list):
+        room_data = list()
+        for id in room_ids:
+            room_data.append(dict(room_id = id))
+        working_payload = {self.ASK_STATUS: self.CLEAN_MODE_ROOMS, self.SELECTED_ZONE: room_data}
+        await self.send_command(self.name, self.sub_type, working_payload)
