@@ -70,6 +70,47 @@ Go to WeBack app :
 * Create a new account
 * Add your robot to your new account
 
+## Maps and Rooms
+
+Maps are supported for `yw_ls` (LiDAR) vacuums. Others may work. Tested on:
+
+  - Electriq "Helga" iQlean-LR01
+
+Integration with [PiotrMachowski/lovelace-xiaomi-vacuum-map-card](https://github.com/PiotrMachowski/lovelace-xiaomi-vacuum-map-card) supports automatic map calibration and room boundaries.
+
+The vacuum entity has been modified to accept `send_command`s for room / segment cleaning.
+
+### Example `lovelace-xiaomi-vacuum-map-card` card setup
+
+To support automatic room boundaries, the Lovelace card needs to be templated. An example of this using [iantrich/config-template-card](https://github.com/iantrich/config-template-card)
+
+*Please set both vacuum and camera entities appropriately. `camera.robot_map` and `vacuum.robot` in this example*
+
+
+``` YAML
+type: custom:config-template-card
+variables:
+  ROOMS: states['camera.robot_map'].attributes.rooms
+entities:
+  - camera.robot_map
+card:
+  type: custom:xiaomi-vacuum-map-card
+  map_source:
+    camera: camera.robot_map
+  calibration_source:
+    camera: true
+  entity: vacuum.robot
+  vacuum_platform: send_command
+  title: Vacuum
+  preset_name: Live map
+  map_modes:
+    - template: vacuum_clean_zone
+    - template: vacuum_clean_segment
+      name: Rooms
+      icon: mdi:floor-plan
+      predefined_selections: ${ROOMS}
+
+```
 
 ## Issues
 

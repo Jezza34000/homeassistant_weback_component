@@ -10,6 +10,8 @@ from datetime import datetime, timedelta
 import httpx
 import websocket
 
+from .VacMap import VacMap
+
 _LOGGER = logging.getLogger(__name__)
 
 # Socket
@@ -208,6 +210,34 @@ class WebackApi:
         else:
             _LOGGER.error(f"WebackApi failed to get robot list (details : {resp})")
             return []
+    
+    async def get_reuse_map_by_id(self, id, sub_type, thing_name):
+        """
+        Get reuse map object by id
+        """
+        _LOGGER.debug(f"WebackApi ask : get reuse map {id}")
+
+        params = {
+            "json": {
+                "opt": "reuse_map_get",
+                "map_id": str(id),
+                "sub_type": sub_type,
+                "thing_name": thing_name
+            },
+            "headers": {
+                'Token': self.jwt_token,
+                'Region': self.region_name
+            }
+        }
+
+        resp = await self.send_http(self.api_url, **params)
+
+        if resp['msg'] == SUCCESS_OK:
+            _LOGGER.debug(f"WebackApi get reuse map OK")
+            return resp['data']['map_data']
+        else:
+            _LOGGER.error(f"WebackApi failed to get reuse map (details : {resp})")
+            return []
 
     @staticmethod
     async def send_http(url, **params):
@@ -247,6 +277,7 @@ class WebackWssCtrl(WebackApi):
     CLEAN_MODE_EDGE_DETECT = 'EdgeDetect'
     CLEAN_MODE_SPOT = 'SpotClean'
     CLEAN_MODE_SINGLE_ROOM = 'RoomClean'
+    CLEAN_MODE_ROOMS = 'SelectClean'
     CLEAN_MODE_MOP = 'MopClean'
     CLEAN_MODE_SMART = 'SmartClean'
     CLEAN_MODE_Z = 'ZmodeClean'
@@ -356,7 +387,7 @@ class WebackWssCtrl(WebackApi):
     CLEANING_STATES = {
         DIRECTION_CONTROL, ROBOT_PLANNING_RECT, RELOCATION, CLEAN_MODE_Z, CLEAN_MODE_AUTO,
         CLEAN_MODE_EDGE, CLEAN_MODE_EDGE_DETECT, CLEAN_MODE_SPOT, CLEAN_MODE_SINGLE_ROOM,
-        CLEAN_MODE_MOP, CLEAN_MODE_SMART
+        CLEAN_MODE_ROOMS, CLEAN_MODE_MOP, CLEAN_MODE_SMART
     }
 
     CHARGING_STATES = {
@@ -373,6 +404,7 @@ class WebackWssCtrl(WebackApi):
     GOTO_POINT = "goto_point"
     RECTANGLE_INFO = "virtual_rect_info"
     SPEAKER_VOLUME = "volume"
+    SELECTED_ZONE = "selected_zone"
     # Payload switches
     VOICE_SWITCH = "voice_switch"
     UNDISTURB_MODE = "undisturb_mode"
@@ -508,8 +540,10 @@ class WebackWssCtrl(WebackApi):
             else:
                 _LOGGER.debug('No update from cloud')
         elif wss_data["notify_info"] == MAP_DATA:
-            # TODO : MAP support
-            _LOGGER.debug(f"WebackApi (WSS) MAP data received")
+            _LOGGER.debug(f"WebackApi (WSS) Map data received")
+            self.map.wss_update(wss_data['map_data'])
+            self.render_map()
+            self._call_subscriber()
         else:
             _LOGGER.error(f"WebackApi (WSS) Received an unknown message from server : {wss_data}")
 
@@ -583,8 +617,13 @@ class WebackWssCtrl(WebackApi):
         """
         _LOGGER.debug(f"WebackApi (WSS) update_status {thing_name}")
         payload = {
-            "opt": "thing_status_get",
+            "topic_name": "grit_tech/notify/server_2_device/" + thing_name,
+            "opt": "sync_thing",
             "sub_type": sub_type,
+            "topic_payload": {
+                "notify_info": "sync_thing",
+                "cmd_timestamp_s": int(time.time())
+            },
             "thing_name": thing_name,
         }
         await self.publish_wss(payload)

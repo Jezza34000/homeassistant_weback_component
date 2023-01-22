@@ -87,9 +87,11 @@ async def async_setup(hass, config):
                                   config[DOMAIN].get(CONF_CLIENT_ID),
                                   config[DOMAIN].get(CONF_API_VERSION),
                                   )
+        await vacuum_device.load_maps()
         hass.data[DOMAIN].append(vacuum_device)
 
     if hass.data[DOMAIN]:
         _LOGGER.debug("Starting vacuum robot components")
         hass.helpers.discovery.load_platform("vacuum", DOMAIN, {}, config)
+        hass.helpers.discovery.load_platform("camera", DOMAIN, {}, config)
     return True

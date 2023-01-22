@@ -1,6 +1,8 @@
 import logging
+import io
 
 from .WebackApi import WebackWssCtrl
+from .VacMap import VacMap, VacMapDraw, VacMapRoom
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -13,6 +15,8 @@ class VacDevice(WebackWssCtrl):
         self.name = thing_name
         self.nickname = thing_nickname
         self.sub_type = sub_type
+        self.map = None
+        self.map_image_buffer = None
 
         # First init status from HTTP API
         if self.robot_status is None:
@@ -28,6 +32,31 @@ class VacDevice(WebackWssCtrl):
             await self.refresh_handler(self.name, self.sub_type)
         except:
             _LOGGER.exception('Error on watch_state starting refresh_handler')
+
+    async def load_maps(self):
+        """Load the current reuse map"""
+        map_data = await self.get_reuse_map_by_id(self.robot_status["hismap_id"], self.sub_type, self.name)
+        if map_data is not []:
+            self.map = VacMap(map_data)
+            self.render_map()
+
+    def render_map(self):
+        if not self.map:
+            return False
+
+        vac_map_draw = VacMapDraw(self.map)
+        vac_map_draw.draw_charger_point()
+        vac_map_draw.draw_path()
+        vac_map_draw.draw_robot_position()
+
+        img = vac_map_draw.get_image()
+
+        img_byte_arr = io.BytesIO()
+        img.save(img_byte_arr, format='PNG')
+        img.close()
+        self.map_image_buffer = img_byte_arr.getvalue()
+
+        return True
 
     # ==========================================================
     # Vacuum Entity
@@ -201,3 +230,10 @@ class VacDevice(WebackWssCtrl):
         else:
             _LOGGER.error(f"Undisturb mode can't be set with value : {state}")
         return
+
+    async def clean_room(self, room_ids: list):
+        room_data = list()
+        for id in room_ids:
+            room_data.append(dict(room_id = id))
+        working_payload = {self.ASK_STATUS: self.CLEAN_MODE_ROOMS, self.SELECTED_ZONE: room_data}
+        await self.send_command(self.name, self.sub_type, working_payload)
