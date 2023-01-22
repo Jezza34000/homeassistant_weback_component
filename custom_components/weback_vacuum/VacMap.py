@@ -192,7 +192,7 @@ class VacMap:
         return False
         
     def get_robot_position_virtual(self):
-        return self._pixel_to_virtual(self.get_robot_position_virtual())
+        return self._pixel_to_virtual(self.get_robot_position_pixel())
 
         
     def get_path(self):
