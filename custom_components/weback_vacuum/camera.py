@@ -43,6 +43,7 @@ class WebackVacuumCamera(Camera):
         """Initialize the Weback Vacuum Map"""
         super().__init__()
         self._vacdevice = device
+        self._vacdevice.register_map_camera(self)
         # self.entity_id = entity_id
         self.content_type = "image/png"
         

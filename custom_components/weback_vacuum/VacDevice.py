@@ -17,6 +17,7 @@ class VacDevice(WebackWssCtrl):
         self.sub_type = sub_type
         self.map = None
         self.map_image_buffer = None
+        self.map_camera = None
 
         # First init status from HTTP API
         if self.robot_status is None:
@@ -56,7 +57,18 @@ class VacDevice(WebackWssCtrl):
         img.close()
         self.map_image_buffer = img_byte_arr.getvalue()
 
+        if self.map_camera is not None:
+            self.should_poll = False
+            self.trigger_map_camera_update()
+
         return True
+
+    def register_map_camera(self, camera):
+        self.map_camera = camera
+
+    def trigger_map_camera_update(self):
+        if self.map_camera is not None:
+            self.map_camera.schedule_update_ha_state(True)
 
     # ==========================================================
     # Vacuum Entity
