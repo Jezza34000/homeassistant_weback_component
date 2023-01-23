@@ -429,6 +429,7 @@ class WebackWssCtrl(WebackApi):
         self.wst = None
         self.ws = None
         self._refresh_time = 60
+        self._last_refresh = 0
         self.sent_counter = 0
         
         # Reloading cached creds
@@ -647,15 +648,17 @@ class WebackWssCtrl(WebackApi):
     async def refresh_handler(self, thing_name, sub_type):
         _LOGGER.debug("WebackApi (WSS) Start refresh_handler")
         while True:
-            try:
-                if self.socket_state != SOCK_CONNECTED:
-                    await self.connect_wss()
+            if time.time() - self._last_refresh >= self._refresh_time:
+                try:
+                    if self.socket_state != SOCK_CONNECTED:
+                        await self.connect_wss()
 
-                _LOGGER.debug(f"WebackApi (WSS) Refreshing...")
-                await self.update_status(thing_name, sub_type)
-                await asyncio.sleep(self._refresh_time)
-            except Exception as e:
-                _LOGGER.error(f"WebackApi (WSS) Error during refresh_handler (details={e})")
+                    _LOGGER.debug(f"WebackApi (WSS) Refreshing...")
+                    await self.update_status(thing_name, sub_type)
+                except Exception as e:
+                    _LOGGER.error(f"WebackApi (WSS) Error during refresh_handler (details={e})")
+                self._last_refresh = time.time()
+            await asyncio.sleep(5)
 
     def subscribe(self, subscriber):
         _LOGGER.debug("WebackApi (WSS): adding a new subscriber")
