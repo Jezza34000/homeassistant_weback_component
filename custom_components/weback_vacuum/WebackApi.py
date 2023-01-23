@@ -387,7 +387,7 @@ class WebackWssCtrl(WebackApi):
     CLEANING_STATES = {
         DIRECTION_CONTROL, ROBOT_PLANNING_RECT, RELOCATION, CLEAN_MODE_Z, CLEAN_MODE_AUTO,
         CLEAN_MODE_EDGE, CLEAN_MODE_EDGE_DETECT, CLEAN_MODE_SPOT, CLEAN_MODE_SINGLE_ROOM,
-        CLEAN_MODE_ROOMS, CLEAN_MODE_MOP, CLEAN_MODE_SMART
+        CLEAN_MODE_ROOMS, CLEAN_MODE_MOP, CLEAN_MODE_SMART, CHARGE_MODE_RETURNING
     }
 
     CHARGING_STATES = {
@@ -408,7 +408,7 @@ class WebackWssCtrl(WebackApi):
     PLANNING_RECT_POINT_NUM = "planning_rect_point_num"
     PLANNING_RECT_X = "planning_rect_x"
     PLANNING_RECT_Y = "planning_rect_y"
-    
+
     # Payload switches
     VOICE_SWITCH = "voice_switch"
     UNDISTURB_MODE = "undisturb_mode"
@@ -547,6 +547,7 @@ class WebackWssCtrl(WebackApi):
             _LOGGER.debug(f"WebackApi (WSS) Map data received")
             self.map.wss_update(wss_data['map_data'])
             self.render_map()
+            self.adapt_refresh_time(self.robot_status)
             self._call_subscriber()
         else:
             _LOGGER.error(f"WebackApi (WSS) Received an unknown message from server : {wss_data}")
