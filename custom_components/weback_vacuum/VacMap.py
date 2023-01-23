@@ -34,7 +34,7 @@ class VacMapDraw:
         for room in rooms:
             self.draw_room(room)
 
-    def draw_path(self, col = (0x1C, 0xE3, 0xDA, 0xFF)):
+    def draw_path(self, col = (0x1C, 0xE3, 0xDA, 0xFF), invisible_relocate = True):
         path, point_types = self.vac_map.get_path()
 
         last_coord = None
@@ -45,8 +45,8 @@ class VacMapDraw:
                 continue
 
             point_type = point_types[i]
-            
-            self.draw.line((last_coord, coord), col if point_type == VacMap.PATH_VACUUMING else (255,255,255,0), width=3)
+            if(point_type == VacMap.PATH_VACUUMING or invisible_relocate is False):
+                self.draw.line((last_coord, coord), col if point_type == VacMap.PATH_VACUUMING else (255,255,255,0), width=3)
 
             last_coord = coord        
 

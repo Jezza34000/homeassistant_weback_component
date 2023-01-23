@@ -387,7 +387,7 @@ class WebackWssCtrl(WebackApi):
     CLEANING_STATES = {
         DIRECTION_CONTROL, ROBOT_PLANNING_RECT, RELOCATION, CLEAN_MODE_Z, CLEAN_MODE_AUTO,
         CLEAN_MODE_EDGE, CLEAN_MODE_EDGE_DETECT, CLEAN_MODE_SPOT, CLEAN_MODE_SINGLE_ROOM,
-        CLEAN_MODE_ROOMS, CLEAN_MODE_MOP, CLEAN_MODE_SMART
+        CLEAN_MODE_ROOMS, CLEAN_MODE_MOP, CLEAN_MODE_SMART, CHARGE_MODE_RETURNING
     }
 
     CHARGING_STATES = {
@@ -405,6 +405,10 @@ class WebackWssCtrl(WebackApi):
     RECTANGLE_INFO = "virtual_rect_info"
     SPEAKER_VOLUME = "volume"
     SELECTED_ZONE = "selected_zone"
+    PLANNING_RECT_POINT_NUM = "planning_rect_point_num"
+    PLANNING_RECT_X = "planning_rect_x"
+    PLANNING_RECT_Y = "planning_rect_y"
+
     # Payload switches
     VOICE_SWITCH = "voice_switch"
     UNDISTURB_MODE = "undisturb_mode"
@@ -425,6 +429,7 @@ class WebackWssCtrl(WebackApi):
         self.wst = None
         self.ws = None
         self._refresh_time = 60
+        self._last_refresh = 0
         self.sent_counter = 0
         
         # Reloading cached creds
@@ -543,6 +548,7 @@ class WebackWssCtrl(WebackApi):
             _LOGGER.debug(f"WebackApi (WSS) Map data received")
             self.map.wss_update(wss_data['map_data'])
             self.render_map()
+            self.adapt_refresh_time(self.robot_status)
             self._call_subscriber()
         else:
             _LOGGER.error(f"WebackApi (WSS) Received an unknown message from server : {wss_data}")
@@ -642,15 +648,17 @@ class WebackWssCtrl(WebackApi):
     async def refresh_handler(self, thing_name, sub_type):
         _LOGGER.debug("WebackApi (WSS) Start refresh_handler")
         while True:
-            try:
-                if self.socket_state != SOCK_CONNECTED:
-                    await self.connect_wss()
+            if time.time() - self._last_refresh >= self._refresh_time:
+                try:
+                    if self.socket_state != SOCK_CONNECTED:
+                        await self.connect_wss()
 
-                _LOGGER.debug(f"WebackApi (WSS) Refreshing...")
-                await self.update_status(thing_name, sub_type)
-                await asyncio.sleep(self._refresh_time)
-            except Exception as e:
-                _LOGGER.error(f"WebackApi (WSS) Error during refresh_handler (details={e})")
+                    _LOGGER.debug(f"WebackApi (WSS) Refreshing...")
+                    await self.update_status(thing_name, sub_type)
+                except Exception as e:
+                    _LOGGER.error(f"WebackApi (WSS) Error during refresh_handler (details={e})")
+                self._last_refresh = time.time()
+            await asyncio.sleep(5)
 
     def subscribe(self, subscriber):
         _LOGGER.debug("WebackApi (WSS): adding a new subscriber")

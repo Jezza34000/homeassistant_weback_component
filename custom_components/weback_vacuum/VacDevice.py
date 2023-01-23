@@ -17,6 +17,7 @@ class VacDevice(WebackWssCtrl):
         self.sub_type = sub_type
         self.map = None
         self.map_image_buffer = None
+        self.map_camera = None
 
         # First init status from HTTP API
         if self.robot_status is None:
@@ -56,7 +57,18 @@ class VacDevice(WebackWssCtrl):
         img.close()
         self.map_image_buffer = img_byte_arr.getvalue()
 
+        if self.map_camera is not None:
+            self.should_poll = False
+            self.trigger_map_camera_update()
+
         return True
+
+    def register_map_camera(self, camera):
+        self.map_camera = camera
+
+    def trigger_map_camera_update(self):
+        if self.map_camera is not None:
+            self.map_camera.schedule_update_ha_state(True)
 
     # ==========================================================
     # Vacuum Entity
@@ -236,4 +248,23 @@ class VacDevice(WebackWssCtrl):
         for id in room_ids:
             room_data.append(dict(room_id = id))
         working_payload = {self.ASK_STATUS: self.CLEAN_MODE_ROOMS, self.SELECTED_ZONE: room_data}
+        await self.send_command(self.name, self.sub_type, working_payload)
+
+    async def clean_zone(self, bounding):
+        box_x = []
+        box_y = []
+        num_boxes = len(bounding)
+
+        for box in bounding:
+            box_x.append(int(box[0]  / 10))
+            box_x.append(int(box[0]  / 10))
+            box_x.append(int(box[2]  / 10))
+            box_x.append(int(box[2]  / 10))
+            box_y.append(int(box[1]  / 10))
+            box_y.append(int(box[3]  / 10))
+            box_y.append(int(box[3]  / 10))
+            box_y.append(int(box[1]  / 10))
+        
+        working_payload = {self.ASK_STATUS: self.ROBOT_PLANNING_RECT, self.PLANNING_RECT_POINT_NUM: num_boxes * 4, self.PLANNING_RECT_X: box_x, self.PLANNING_RECT_Y: box_y}
+        _LOGGER.debug(f"Vacuum : Planning rect sent {working_payload}")
         await self.send_command(self.name, self.sub_type, working_payload)

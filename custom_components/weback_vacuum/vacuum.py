@@ -300,5 +300,9 @@ class WebackVacuumRobot(StateVacuumEntity):
         _LOGGER.debug(f"Vacuum: send_command (command={command} / params={params} / kwargs={kwargs})")
         if(command == 'app_segment_clean'):
             await self.device.clean_room(params)
+        elif(command == 'app_zoned_clean'):
+            await self.device.clean_zone(params)
+        elif(command == 'app_goto_target'):
+            await self.device.goto([int(params[0] / 10), int(params[1] / 10)])
         else:
             await self.device.send_command(self.name, self.sub, params)

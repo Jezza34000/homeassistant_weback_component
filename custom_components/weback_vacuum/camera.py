@@ -29,7 +29,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     for device in hass.data[DOMAIN]:
         entity_id = generate_entity_id(ENTITY_ID_FORMAT, device.name, hass=hass)
         vacuums.append(WebackVacuumCamera(device, entity_id))
-        hass.loop.create_task(device.watch_state())
+        # hass.loop.create_task(device.watch_state())
     
     _LOGGER.debug("Adding Weback Vacuums Maps to Home Assistant: %s", vacuums)
 
@@ -43,6 +43,7 @@ class WebackVacuumCamera(Camera):
         """Initialize the Weback Vacuum Map"""
         super().__init__()
         self._vacdevice = device
+        self._vacdevice.register_map_camera(self)
         # self.entity_id = entity_id
         self.content_type = "image/png"
         
