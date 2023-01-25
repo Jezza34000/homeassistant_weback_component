@@ -408,6 +408,7 @@ class WebackWssCtrl(WebackApi):
     PLANNING_RECT_POINT_NUM = "planning_rect_point_num"
     PLANNING_RECT_X = "planning_rect_x"
     PLANNING_RECT_Y = "planning_rect_y"
+    ACTIVE_MAP_ID_PROP = "hismap_id"
 
     # Payload switches
     VOICE_SWITCH = "voice_switch"
@@ -546,8 +547,15 @@ class WebackWssCtrl(WebackApi):
                 _LOGGER.debug('No update from cloud')
         elif wss_data["notify_info"] == MAP_DATA:
             _LOGGER.debug(f"WebackApi (WSS) Map data received")
-            self.map.wss_update(wss_data['map_data'])
-            self.render_map()
+            try:
+                if not self.map:
+                    self.map = VacMap(wss_data['map_data'])
+                else:
+                    self.map.wss_update(wss_data['map_data'])
+                self.render_map()
+            except Exception as e:
+                    _LOGGER.error(f"WebackApi (WSS) Error during on_message (map_data) (details={e})")
+
             self.adapt_refresh_time(self.robot_status)
             self._call_subscriber()
         else:
