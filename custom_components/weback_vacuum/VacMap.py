@@ -126,7 +126,10 @@ class VacMap:
 
         for i, room in enumerate(self.data["room_zone_info"]):
             existing_room = next(room for room in existing_room_data if room["room_id"] == self.data["room_zone_info"][i]["room_id"])
-            self.data["room_zone_info"][i]["room_name"] = existing_room["room_name"]
+            if "room_name" in existing_room:
+                self.data["room_zone_info"][i]["room_name"] = existing_room["room_name"]
+            else:
+                self.data["room_zone_info"][i]["room_name"] = existing_room["room_id"]
 
 
     def get_map_bitmap(self):
