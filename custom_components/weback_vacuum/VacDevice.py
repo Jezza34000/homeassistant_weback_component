@@ -37,7 +37,7 @@ class VacDevice(WebackWssCtrl):
     async def load_maps(self):
         """Load the current reuse map"""
 
-        if not self.robot_status[self.ACTIVE_MAP_ID_PROP]:
+        if self.ACTIVE_MAP_ID_PROP not in self.robot_status:
             return False
 
         map_data = await self.get_reuse_map_by_id(self.robot_status[self.ACTIVE_MAP_ID_PROP], self.sub_type, self.name)
