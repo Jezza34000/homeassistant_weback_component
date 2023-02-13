@@ -3,11 +3,16 @@ import logging
 
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
-from homeassistant.components.vacuum import (STATE_CLEANING, STATE_DOCKED,
-                                             STATE_ERROR, STATE_IDLE,
-                                             STATE_PAUSED, STATE_RETURNING,
-                                             StateVacuumEntity,
-                                             VacuumEntityFeature)
+from homeassistant.components.vacuum import (
+    STATE_CLEANING,
+    STATE_DOCKED,
+    STATE_ERROR,
+    STATE_IDLE,
+    STATE_PAUSED,
+    STATE_RETURNING,
+    StateVacuumEntity,
+    VacuumEntityFeature,
+)
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.icon import icon_for_battery_level
 
@@ -30,23 +35,18 @@ STATE_MAPPING = {
     VacDevice.DIRECTION_CONTROL: STATE_CLEANING,
     VacDevice.ROBOT_PLANNING_RECT: STATE_CLEANING,
     VacDevice.RELOCATION: STATE_CLEANING,
-    
     # STATE_DOCKED
     VacDevice.CHARGE_MODE_CHARGING: STATE_DOCKED,
     VacDevice.CHARGE_MODE_DOCK_CHARGING: STATE_DOCKED,
     VacDevice.CHARGE_MODE_DIRECT_CHARGING: STATE_DOCKED,
     VacDevice.CHARGE_MODE_CHARGE_DONE: STATE_DOCKED,
-    
     # STATE_PAUSED
     VacDevice.CLEAN_MODE_STOP: STATE_PAUSED,
-    
     # STATE_IDLE
     VacDevice.IDLE_MODE: STATE_IDLE,
     VacDevice.IDLE_MODE_HIBERNATING: STATE_IDLE,
-    
     # STATE_RETURNING
     VacDevice.CHARGE_MODE_RETURNING: STATE_RETURNING,
-    
     # STATE_ERROR
     VacDevice.ROBOT_ERROR: STATE_ERROR,
 }
@@ -58,7 +58,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     for device in hass.data[DOMAIN]:
         vacuums.append(WebackVacuumRobot(device))
         hass.loop.create_task(device.watch_state())
-    
+
     _LOGGER.debug("Adding Weback Vacuums to Home Assistant: %s", vacuums)
     async_add_entities(vacuums, False)
 
@@ -67,6 +67,7 @@ class WebackVacuumRobot(StateVacuumEntity):
     """
     Weback Vacuum
     """
+
     def __init__(self, device: VacDevice):
         """Initialize the Weback Vacuum."""
         self.device = device
@@ -74,20 +75,20 @@ class WebackVacuumRobot(StateVacuumEntity):
         self._error = None
 
         self._attr_supported_features = (
-                VacuumEntityFeature.TURN_ON
-                | VacuumEntityFeature.TURN_OFF
-                | VacuumEntityFeature.STATUS
-                | VacuumEntityFeature.BATTERY
-                | VacuumEntityFeature.PAUSE
-                | VacuumEntityFeature.STOP
-                | VacuumEntityFeature.RETURN_HOME
-                | VacuumEntityFeature.CLEAN_SPOT
-                | VacuumEntityFeature.LOCATE
-                | VacuumEntityFeature.START
-                | VacuumEntityFeature.SEND_COMMAND
-                | VacuumEntityFeature.FAN_SPEED
+            VacuumEntityFeature.TURN_ON
+            | VacuumEntityFeature.TURN_OFF
+            | VacuumEntityFeature.STATUS
+            | VacuumEntityFeature.BATTERY
+            | VacuumEntityFeature.PAUSE
+            | VacuumEntityFeature.STOP
+            | VacuumEntityFeature.RETURN_HOME
+            | VacuumEntityFeature.CLEAN_SPOT
+            | VacuumEntityFeature.LOCATE
+            | VacuumEntityFeature.START
+            | VacuumEntityFeature.SEND_COMMAND
+            | VacuumEntityFeature.FAN_SPEED
         )
-        _LOGGER.info(f"Vacuum initialized: {self.name}")
+        _LOGGER.info("Vacuum initialized: %s", self.name)
 
     @property
     def should_poll(self) -> bool:
@@ -105,8 +106,8 @@ class WebackVacuumRobot(StateVacuumEntity):
 
     @property
     def available(self):
-        _LOGGER.debug(f"Vacuum: available={self.device.is_available}")
         """Returns true if vacuum is online"""
+        _LOGGER.debug("Vacuum: available=%s", self.device.is_available)
         return self.device.is_available
 
     @property
@@ -114,10 +115,12 @@ class WebackVacuumRobot(StateVacuumEntity):
         """Return the current state of the vacuum."""
         try:
             state_mapping = STATE_MAPPING[self.device.current_mode]
-            _LOGGER.debug(f"Vacuum: state(from mapping)={state_mapping}")
+            _LOGGER.debug("Vacuum: state(from mapping)=%s", state_mapping)
             return state_mapping
         except KeyError:
-            _LOGGER.error(f"Found an unsupported state, state_code: {self.device.current_mode}")
+            _LOGGER.error(
+                "Found an unsupported state, state_code: %s", self.device.current_mode
+            )
             return None
 
     @property
@@ -128,7 +131,11 @@ class WebackVacuumRobot(StateVacuumEntity):
     @property
     def battery_icon(self):
         """Return the battery icon for the vacuum cleaner."""
-        _LOGGER.debug(f"Vacuum: battery_icon battery_level={self.battery_level}, charging={self.is_charging}")
+        _LOGGER.debug(
+            "Vacuum: battery_icon battery_level=%s, charging=%s",
+            self.battery_level,
+            self.is_charging,
+        )
         return icon_for_battery_level(
             battery_level=self.battery_level, charging=self.is_charging
         )
@@ -139,16 +146,15 @@ class WebackVacuumRobot(StateVacuumEntity):
         # Check if robot is in Vacuum/Mop mode
         if self.device.vacuum_or_mop == 1:
             # Vacuum mode
-            _LOGGER.debug(f"Vacuum: (vacuum mode) fan_speed={self.device.fan_status}")
+            _LOGGER.debug("Vacuum: (vacuum mode) fan_speed=%s", self.device.fan_status)
             return self.device.fan_status
-        elif self.device.vacuum_or_mop == 2:
+        if self.device.vacuum_or_mop == 2:
             # Mop mode
-            _LOGGER.debug(f"Vacuum: (mop mode) fan_speed={self.device.mop_status}")
+            _LOGGER.debug("Vacuum: (mop mode) fan_speed=%s", self.device.mop_status)
             return self.device.mop_status
-        else:
-            # No Mop / No Fan
-            _LOGGER.debug(f"Vacuum: no Fan / no Mop")
-            return None
+        # No Mop / No Fan
+        _LOGGER.debug("Vacuum: no Fan / no Mop")
+        return None
 
     @property
     def fan_speed_list(self):
@@ -156,38 +162,42 @@ class WebackVacuumRobot(StateVacuumEntity):
         # Check if robot is in Vacuum/Mop mode
         if self.device.vacuum_or_mop == 1:
             # Vacuum mode
-            _LOGGER.debug(f"Vacuum: (vacuum mode) fan_speed_list={self.device.fan_speed_list}")
+            _LOGGER.debug(
+                "Vacuum: (vacuum mode) fan_speed_list=%s", self.device.fan_speed_list
+            )
             return self.device.fan_speed_list
-        elif self.device.vacuum_or_mop == 2:
+        if self.device.vacuum_or_mop == 2:
             # Mop mode
-            _LOGGER.debug(f"Vacuum: (mop mode) fan_speed_list={self.device.mop_level_list}")
+            _LOGGER.debug(
+                "Vacuum: (mop mode) fan_speed_list=%s", self.device.mop_level_list
+            )
             return self.device.mop_level_list
-        else:
-            # No Mop / No Fan
-            _LOGGER.debug(f"Vacuum: no Fan / no Mop fan_speed_list=None")
-            return None
+        # No Mop / No Fan
+        _LOGGER.debug("Vacuum: no Fan / no Mop fan_speed_list=None")
+        return None
 
     @property
     def error(self):
-        _LOGGER.debug(f"Vacuum: error={self.device.error_info}")
+        """Error messages"""
+        _LOGGER.debug("Vacuum: error=%s", self.device.error_info)
         return self.device.error_info
-    
+
     @property
     def unique_id(self) -> str:
         """Return an unique ID."""
         return self.device.name
-    
+
     @property
     def is_on(self):
         """Return true if vacuum is currently cleaning."""
-        _LOGGER.debug(f"Vacuum: is_on={self.device.is_cleaning}")
+        _LOGGER.debug("Vacuum: is_on=%s", self.device.is_cleaning)
         return self.device.is_cleaning
-    
+
     @property
     def is_charging(self):
         """Return true if vacuum is currently charging."""
         return self.device.is_charging
-    
+
     @property
     def extra_state_attributes(self) -> dict:
         """Return the device-specific state attributes of this vacuum."""
@@ -202,42 +212,43 @@ class WebackVacuumRobot(StateVacuumEntity):
             "error_info": self.device.error_info,
         }
 
-        if 'volume' in self.device.robot_status:
-            extra_value['volume'] = self.device.robot_status['volume']
-            
-        if 'voice' in self.device.robot_status:
-            extra_value['voice'] = self.device.robot_status['voice']
-            
-        if 'undisturb_mode' in self.device.robot_status:
-            extra_value['undisturb_mode'] = self.device.robot_status['undisturb_mode']
+        if "volume" in self.device.robot_status:
+            extra_value["volume"] = self.device.robot_status["volume"]
 
-        if 'clean_area' in self.device.robot_status:
-            clean_area = self.device.robot_status['clean_area']
+        if "voice" in self.device.robot_status:
+            extra_value["voice"] = self.device.robot_status["voice"]
+
+        if "undisturb_mode" in self.device.robot_status:
+            extra_value["undisturb_mode"] = self.device.robot_status["undisturb_mode"]
+
+        if "clean_area" in self.device.robot_status:
+            clean_area = self.device.robot_status["clean_area"]
             if clean_area is None:
                 clean_area = 0
-            extra_value['clean_area'] = round(clean_area, 1)
+            extra_value["clean_area"] = round(clean_area, 1)
 
-        if 'clean_time' in self.device.robot_status:
-            clean_time = self.device.robot_status['clean_time']
+        if "clean_time" in self.device.robot_status:
+            clean_time = self.device.robot_status["clean_time"]
             if clean_time is None:
                 clean_time = 0
-            extra_value['clean_time'] = round(clean_time / 60, 0),
+            extra_value["clean_time"] = (round(clean_time / 60, 0),)
 
         return extra_value
-
 
     # ==========================================================
     # Vacuum Entity
     # -> Method
-    
+
     def on_error(self, error):
         """Handle robot's error"""
         if error == self.device.ROBOT_ERROR_NO:
             self._error = None
         else:
             self._error = error
-        _LOGGER.debug(f"Vacuum: on_error={self._error}")
-        self.hass.bus.fire("weback_vacuum", {"entity_id": self.entity_id, "error": error})
+        _LOGGER.debug("Vacuum: on_error=%s", self._error)
+        self.hass.bus.fire(
+            "weback_vacuum", {"entity_id": self.entity_id, "error": error}
+        )
         self.schedule_update_ha_state(False)
 
     async def async_turn_on(self, **kwargs):
@@ -277,32 +288,37 @@ class WebackVacuumRobot(StateVacuumEntity):
 
     async def async_set_fan_speed(self, fan_speed, **kwargs):
         """Set fan speed"""
-        _LOGGER.debug(f"Vacuum: set_fan_speed (speed={fan_speed})")
+        _LOGGER.debug("Vacuum: set_fan_speed (speed=%s)", fan_speed)
         await self.device.set_fan_water_speed(fan_speed)
 
     async def async_clean_spot(self, **kwargs):
         """Perform a spot clean-up."""
         _LOGGER.debug("Vacuum: clean_spot")
         await self.device.clean_spot()
-    
+
     async def async_goto_location(self, point: str):
         """Ask vacuum go to location point"""
-        _LOGGER.debug(f"Vacuum: goto_location (point={point})")
+        _LOGGER.debug("Vacuum: goto_location (point=%s)", point)
         await self.device.goto(point)
 
     async def async_clean_rectangle(self, rectangle: str):
         """Perform a rectangle defined clean-up."""
-        _LOGGER.debug(f"Vacuum: clean_rectangle (rectangle={rectangle})")
+        _LOGGER.debug("Vacuum: clean_rectangle (rectangle=%s)", rectangle)
         await self.device.clean_rect(rectangle)
 
     async def async_send_command(self, command, params=None, **kwargs):
         """Send a command to a vacuum cleaner."""
-        _LOGGER.debug(f"Vacuum: send_command (command={command} / params={params} / kwargs={kwargs})")
-        if(command == 'app_segment_clean'):
+        _LOGGER.debug(
+            "Vacuum: send_command (command=%s / params=%s / kwargs=%s)",
+            command,
+            params,
+            kwargs,
+        )
+        if command == "app_segment_clean":
             await self.device.clean_room(params)
-        elif(command == 'app_zoned_clean'):
+        elif command == "app_zoned_clean":
             await self.device.clean_zone(params)
-        elif(command == 'app_goto_target'):
+        elif command == "app_goto_target":
             await self.device.goto([int(params[0] / 10), int(params[1] / 10)])
         else:
             await self.device.send_command(self.name, self.sub, params)
