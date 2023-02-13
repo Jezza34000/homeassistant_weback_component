@@ -4,18 +4,22 @@ from datetime import timedelta
 
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
-from homeassistant.const import (CONF_API_VERSION, CONF_CLIENT_ID,
-                                 CONF_PASSWORD, CONF_USERNAME)
+from homeassistant.const import (
+    CONF_API_VERSION,
+    CONF_CLIENT_ID,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 
-from .VacDevice import VacDevice
-from .WebackApi import WebackApi
+from .vacdevice import VacDevice
+from .webackapi import WebackApi
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "weback_vacuum"
-CONF_REGION = 'region'
-CONF_LANGUAGE = 'language'
-CONF_APP = 'application'
+CONF_REGION = "region"
+CONF_LANGUAGE = "language"
+CONF_APP = "application"
 
 # Default values
 DEFAULT_LANGUAGE = "en"
@@ -48,7 +52,7 @@ async def async_setup(hass, config):
     hass.data[DOMAIN] = []
 
     weback_api = WebackApi(
-        config[DOMAIN].get(CONF_USERNAME), 
+        config[DOMAIN].get(CONF_USERNAME),
         config[DOMAIN].get(CONF_PASSWORD),
         config[DOMAIN].get(CONF_REGION),
         config[DOMAIN].get(CONF_LANGUAGE),
@@ -69,24 +73,29 @@ async def async_setup(hass, config):
     if not robots:
         _LOGGER.error("Weback component was unable to find any robots. Failed to setup")
         return False
-    
-    _LOGGER.debug(f"Weback vacuum robots: {robots}")
+
+    _LOGGER.debug("Weback vacuum robots: %s", robots)
 
     for robot in robots:
-        _LOGGER.info(f'Found robot : {robot["thing_name"]} nickname : {robot["thing_nickname"]}')
+        _LOGGER.info(
+            "Found robot : %s, nickname : %s",
+            robot["thing_name"],
+            robot["thing_nickname"],
+        )
 
-        vacuum_device = VacDevice(robot["thing_name"],
-                                  robot["thing_nickname"],
-                                  robot["sub_type"],
-                                  robot["thing_status"],
-                                  config[DOMAIN].get(CONF_USERNAME),
-                                  config[DOMAIN].get(CONF_PASSWORD),
-                                  config[DOMAIN].get(CONF_REGION),
-                                  config[DOMAIN].get(CONF_LANGUAGE),
-                                  config[DOMAIN].get(CONF_APP),
-                                  config[DOMAIN].get(CONF_CLIENT_ID),
-                                  config[DOMAIN].get(CONF_API_VERSION),
-                                  )
+        vacuum_device = VacDevice(
+            robot["thing_name"],
+            robot["thing_nickname"],
+            robot["sub_type"],
+            robot["thing_status"],
+            config[DOMAIN].get(CONF_USERNAME),
+            config[DOMAIN].get(CONF_PASSWORD),
+            config[DOMAIN].get(CONF_REGION),
+            config[DOMAIN].get(CONF_LANGUAGE),
+            config[DOMAIN].get(CONF_APP),
+            config[DOMAIN].get(CONF_CLIENT_ID),
+            config[DOMAIN].get(CONF_API_VERSION),
+        )
         await vacuum_device.load_maps()
         hass.data[DOMAIN].append(vacuum_device)
 
