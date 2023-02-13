@@ -70,7 +70,7 @@ class VacDevice(WebackWssCtrl):
             self.render_map()
 
     def render_map(self):
-        """ Rendering Map """
+        """Rendering Map"""
         if not self.map:
             return False
 
@@ -93,11 +93,11 @@ class VacDevice(WebackWssCtrl):
         return True
 
     def register_map_camera(self, camera):
-        """ Register map camera """
+        """Register map camera"""
         self.map_camera = camera
 
     def trigger_map_camera_update(self):
-        """ Trigger map camera update """
+        """Trigger map camera update"""
         if self.map_camera is not None:
             self.map_camera.schedule_update_ha_state(True)
 
@@ -209,7 +209,8 @@ class VacDevice(WebackWssCtrl):
         # Checking if robot is running otherwise it will not apply value
         if not self.is_cleaning:
             _LOGGER.info(
-                "Vacuum: Can't set set fan/water speed (value=%s) robot is not running.", speed
+                "Vacuum: Can't set set fan/water speed (value=%s) robot is not running.",
+                speed,
             )
             return
         # Checking value are allowed
@@ -222,43 +223,43 @@ class VacDevice(WebackWssCtrl):
         return
 
     async def turn_on(self):
-        """ Turn ON vacuum """
+        """Turn ON vacuum"""
         working_payload = {self.ASK_STATUS: self.CLEAN_MODE_AUTO}
         await self.send_command(self.name, self.sub_type, working_payload)
         return
 
     async def turn_off(self):
-        """ Turn OFF vacuum """
+        """Turn OFF vacuum"""
         working_payload = {self.ASK_STATUS: self.CHARGE_MODE_RETURNING}
         await self.send_command(self.name, self.sub_type, working_payload)
         return
 
     async def pause(self):
-        """ Pause vacuum """
+        """Pause vacuum"""
         working_payload = {self.ASK_STATUS: self.CLEAN_MODE_STOP}
         await self.send_command(self.name, self.sub_type, working_payload)
         return
 
     async def clean_spot(self):
-        """ Clean spot command """
+        """Clean spot command"""
         working_payload = {self.ASK_STATUS: self.CLEAN_MODE_SPOT}
         await self.send_command(self.name, self.sub_type, working_payload)
         return
 
     async def locate(self):
-        """ Locate vacuum """
+        """Locate vacuum"""
         working_payload = {self.ASK_STATUS: self.ROBOT_LOCATION_SOUND}
         await self.send_command(self.name, self.sub_type, working_payload)
         return
 
     async def return_to_base(self):
-        """ Return to base command """
+        """Return to base command"""
         working_payload = {self.ASK_STATUS: self.CHARGE_MODE_RETURNING}
         await self.send_command(self.name, self.sub_type, working_payload)
         return
 
     async def goto(self, point: str):
-        """ GoTo point command """
+        """GoTo point command"""
         working_payload = {
             self.ASK_STATUS: self.ROBOT_PLANNING_LOCATION,
             self.GOTO_POINT: point,
@@ -267,7 +268,7 @@ class VacDevice(WebackWssCtrl):
         return
 
     async def clean_rect(self, rectangle: str):
-        """ Clean rectangle command """
+        """Clean rectangle command"""
         working_payload = {
             self.ASK_STATUS: self.ROBOT_PLANNING_RECT,
             self.RECTANGLE_INFO: rectangle,
@@ -276,7 +277,7 @@ class VacDevice(WebackWssCtrl):
         return
 
     async def voice_mode(self, state: str):
-        """ Voice mode """
+        """Voice mode"""
         if state in self.SWITCH_VALUES:
             working_payload = {self.VOICE_SWITCH: state}
             await self.send_command(self.name, self.sub_type, working_payload)
@@ -285,7 +286,7 @@ class VacDevice(WebackWssCtrl):
         return
 
     async def undisturb_mode(self, state: str):
-        """ Undisturb mode """
+        """Undisturb mode"""
         if state in self.SWITCH_VALUES:
             working_payload = {self.UNDISTURB_MODE: state}
             await self.send_command(self.name, self.sub_type, working_payload)
@@ -294,7 +295,7 @@ class VacDevice(WebackWssCtrl):
         return
 
     async def clean_room(self, room_ids_list: list):
-        """ Clean room command """
+        """Clean room command"""
         room_data = []
         for room_id in room_ids_list:
             room_data.append(dict(room_id=room_id))
@@ -305,7 +306,7 @@ class VacDevice(WebackWssCtrl):
         await self.send_command(self.name, self.sub_type, working_payload)
 
     async def clean_zone(self, bounding):
-        """ Clean zone command """
+        """Clean zone command"""
         box_x = []
         box_y = []
         num_boxes = len(bounding)
