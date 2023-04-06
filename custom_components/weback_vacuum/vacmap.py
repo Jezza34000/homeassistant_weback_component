@@ -127,7 +127,6 @@ class VacMapRoom:
 
 
 class VacMap:
-
     MAP_FORMAT_YW_LASER = "yw_ls"
     MAP_FORMAT_YW_VISUAL = "yw_vs"
     MAP_FORMAT_GYRO = "gyro"

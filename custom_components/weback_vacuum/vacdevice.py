@@ -5,7 +5,7 @@ VacDevice Module
 import io
 import logging
 
-from .vacmap import VacMap, VacMapDraw, VacMapRoom
+from .vacmap import VacMap, VacMapDraw
 from .webackapi import WebackWssCtrl
 
 _LOGGER = logging.getLogger(__name__)
@@ -87,7 +87,6 @@ class VacDevice(WebackWssCtrl):
         self.map_image_buffer = img_byte_arr.getvalue()
 
         if self.map_camera is not None:
-            self.should_poll = False
             self.trigger_map_camera_update()
 
         return True

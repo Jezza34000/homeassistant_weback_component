@@ -1,3 +1,6 @@
+"""
+Weback API class
+"""
 import asyncio
 import configparser
 import hashlib
@@ -87,7 +90,6 @@ class WebackApi:
         resp = await self.send_http(AUTH_URL, **params)
 
         if resp["msg"] == SUCCESS_OK:
-
             # Login OK
             self.jwt_token = resp["data"]["jwt_token"]
             self.region_name = resp["data"]["region_name"]
@@ -120,7 +122,7 @@ class WebackApi:
             _LOGGER.error("WebackApi login failed, wrong password")
             return False
         # Login NOK
-        _LOGGER.error("WebackApi can't login (reason is :%s)",  resp['msg'])
+        _LOGGER.error("WebackApi can't login (reason is :%s)", resp["msg"])
         return False
 
     def verify_cached_creds(self):
@@ -167,7 +169,7 @@ class WebackApi:
             config.set("weback_token", "api_url", str(self.api_url))
             config.set("weback_token", "wss_url", str(self.wss_url))
             config.set("weback_token", "region_name", str(self.region_name))
-            with open("weback_creds", "w") as configfile:
+            with open("weback_creds", "w", encoding="utf-8") as configfile:
                 config.write(configfile)
             _LOGGER.debug("WebackApi saved new creds")
         except Exception as excpt_msg:
@@ -200,15 +202,15 @@ class WebackApi:
             "json": {"opt": "user_thing_list_get"},
             "headers": {"Token": self.jwt_token, "Region": self.region_name},
         }
-
         resp = await self.send_http(self.api_url, **params)
 
         if resp["msg"] == SUCCESS_OK:
-            _LOGGER.debug("WebackApi get robot list OK : %s", resp['data']['thing_list'])
+            _LOGGER.debug(
+                "WebackApi get robot list OK : %s", resp["data"]["thing_list"]
+            )
             return resp["data"]["thing_list"]
-        else:
-            _LOGGER.error("WebackApi failed to get robot list (details : %s)", resp)
-            return []
+        _LOGGER.error("WebackApi failed to get robot list (details : %s)", resp)
+        return []
 
     async def get_reuse_map_by_id(self, map_id, sub_type, thing_name):
         """
@@ -231,9 +233,8 @@ class WebackApi:
         if resp["msg"] == SUCCESS_OK:
             _LOGGER.debug("WebackApi get reuse map OK")
             return resp["data"]["map_data"]
-        else:
-            _LOGGER.error("WebackApi failed to get reuse map (details : %s)", resp)
-            return []
+        _LOGGER.error("WebackApi failed to get reuse map (details : %s)", resp)
+        return []
 
     @staticmethod
     async def send_http(url, **params):
@@ -251,22 +252,28 @@ class WebackApi:
                         _LOGGER.debug("WebackApi : Send HTTP OK, return=200")
                         _LOGGER.debug("WebackApi : HTTP data received = %s", req.json())
                         return json.load(req.json())
-                    else:
-                        # Server status NOK
-                        _LOGGER.warning(
-                            "WebackApi : Bad server response (status code=%s) retry... (%s/%s)", r.status_code, attempt, N_RETRY
-                        )
+                    # Server status NOK
+                    _LOGGER.warning(
+                        "WebackApi : Bad server response (status code=%s) retry... (%s/%s)",
+                        req.status_code,
+                        attempt,
+                        N_RETRY,
+                    )
             except httpx.RequestError as http_excpt:
                 _LOGGER.debug(
-                    "Send HTTP exception details=%s retry... (%s/%s)", http_excpt, attempt, N_RETRY
+                    "Send HTTP exception details=%s retry... (%s/%s)",
+                    http_excpt,
+                    attempt,
+                    N_RETRY,
                 )
-        else:
-            _LOGGER.error("WebackApi : HTTP error after %s retry", N_RETRY)
-            return {"msg": "error", "details": f"Failed after {N_RETRY} retry"}
+        _LOGGER.error("WebackApi : HTTP error after %s retry", N_RETRY)
+        return {"msg": "error", "details": f"Failed after {N_RETRY} retry"}
 
 
 class WebackWssCtrl(WebackApi):
-
+    """
+    Weback WSS class
+    """
     # Clean mode
     CLEAN_MODE_AUTO = "AutoClean"
     CLEAN_MODE_EDGE = "EdgeClean"
@@ -433,6 +440,7 @@ class WebackWssCtrl(WebackApi):
         self.subscriber = []
         self.wst = None
         self.ws = None
+        self.map = None
         self._refresh_time = 60
         self._last_refresh = 0
         self.sent_counter = 0
@@ -452,10 +460,7 @@ class WebackWssCtrl(WebackApi):
         ):
             _LOGGER.debug("WebackApi (WSS) Credentials need renewal")
             # Cred renewal necessary
-            if await self.login():
-                return True
-            else:
-                return False
+            return bool(await self.login())
         _LOGGER.debug("WebackApi (WSS) Credentials are OK")
         return True
 
@@ -468,7 +473,10 @@ class WebackWssCtrl(WebackApi):
             return False
 
         _LOGGER.debug(
-            "WebackApi (WSS) Addr=%s / Region=%s / Token=%s", self.wss_url, self.region_name,self.jwt_token
+            "WebackApi (WSS) Addr=%s / Region=%s / Token=%s",
+            self.wss_url,
+            self.region_name,
+            self.jwt_token,
         )
 
         try:
@@ -494,9 +502,8 @@ class WebackWssCtrl(WebackApi):
             if self.wst.is_alive():
                 _LOGGER.debug("WebackApi (WSS) Thread was init")
                 return True
-            else:
-                _LOGGER.error("WebackApi (WSS) Thread connection init has FAILED")
-                return False
+            _LOGGER.error("WebackApi (WSS) Thread connection init has FAILED")
+            return False
 
         except Exception as e:
             self.socket_state = SOCK_ERROR
@@ -535,13 +542,13 @@ class WebackWssCtrl(WebackApi):
 
         if close_status_code or close_msg:
             _LOGGER.debug(
-                "WebackApi (WSS) Close Status_code: " + str(close_status_code)
+                "WebackApi (WSS) Close Status_code: %s ", str(close_status_code)
             )
-            _LOGGER.debug("WebackApi (WSS) Close Message: " + str(close_msg))
+            _LOGGER.debug("WebackApi (WSS) Close Message: %s", str(close_msg))
         self.socket_state = SOCK_CLOSE
 
     def on_pong(self, message):
-        """ Socket on_pong """
+        """Socket on_pong"""
         _LOGGER.debug("WebackApi (WSS) Got a Pong")
 
     def on_open(self, ws):
@@ -570,10 +577,11 @@ class WebackWssCtrl(WebackApi):
                     self.map = VacMap(wss_data["map_data"])
                 else:
                     self.map.wss_update(wss_data["map_data"])
-                self.render_map()
+                # self.render_map()
             except Exception as msg_excpt:
                 _LOGGER.error(
-                    "WebackApi (WSS) Error during on_message (map_data) (details=%s)", msg_excpt
+                    "WebackApi (WSS) Error during on_message (map_data) (details=%s)",
+                    msg_excpt,
                 )
 
             self.adapt_refresh_time(self.robot_status)
@@ -616,11 +624,13 @@ class WebackWssCtrl(WebackApi):
                 except websocket.WebSocketConnectionClosedException as sock_excpt:
                     self.socket_state = SOCK_CLOSE
                     _LOGGER.debug(
-                        "WebackApi (WSS) Error while publishing message (details: %s)", sock_excpt
+                        "WebackApi (WSS) Error while publishing message (details: %s)",
+                        sock_excpt,
                     )
             else:
                 _LOGGER.debug(
-                    "WebackApi (WSS) Can't publish message socket_state=%s, reconnecting...", self.socket_state
+                    "WebackApi (WSS) Can't publish message socket_state=%s, reconnecting...",
+                    self.socket_state,
                 )
                 await self.connect_wss()
         _LOGGER.error(
@@ -694,7 +704,8 @@ class WebackWssCtrl(WebackApi):
                     await self.update_status(thing_name, sub_type)
                 except Exception as refresh_excpt:
                     _LOGGER.error(
-                        "WebackApi (WSS) Error during refresh_handler (details=%s)", refresh_excpt
+                        "WebackApi (WSS) Error during refresh_handler (details=%s)",
+                        refresh_excpt,
                     )
                 self._last_refresh = time.time()
             await asyncio.sleep(5)
