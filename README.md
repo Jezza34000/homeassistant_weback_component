@@ -1,8 +1,7 @@
 # WeBack component for HomeAssistant
 
 [![](https://img.shields.io/github/release/Jezza34000/homeassistant_weback_component/all.svg?style=for-the-badge)](https://github.com/Jezza34000/homeassistant_weback_component)
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=for-the-badge)](https://github.com/hacs/integration)
-
+[![hacs_badge](https://img.shields.io/badge/HACS-Default-41BDF5.svg?style=for-the-badge)](https://github.com/hacs/integration)\
 Home Assistant component for controlling robot from brand like : Neatsvor / Tesvor / Orfeld / Abir...
 This component can control robot using WeBack app.
 
@@ -10,12 +9,11 @@ This component can control robot using WeBack app.
 
 ## Installation (with HACS)
 
-1. Go to Home Assistant > HACS > Integrations > Click on tree dot (on top right corner) > Custom repositories \
-and fill :
-   * **Repository** :  `Jezza34000/homeassistant_weback_component`
-   * **Category** : `Integration` 
-
-2. Click on `ADD`, restart HA.
+1. Got to HACS 
+2. Integrations 
+3. EXPLORE & DOWNLOAD REPOSITORIES 
+4. Enter "Weback"
+5. DOWNLOAD THIS REPOSITORY
 
 ## Installation (manual)
 
