@@ -131,7 +131,10 @@ class WebackApi:
         """
         creds_data = self.get_token_file()
         if "weback_token" in creds_data:
-            if self.check_token_is_valid(creds_data["weback_token"]["token_exp"]):
+            if (
+                self.check_token_is_valid(creds_data["weback_token"]["token_exp"])
+                and self.user == creds_data["weback_token"]["user"]
+            ):
                 # Valid creds to use, loading it
                 self.jwt_token = creds_data["weback_token"]["jwt_token"]
                 self.region_name = creds_data["weback_token"]["region_name"]
@@ -164,6 +167,7 @@ class WebackApi:
         try:
             config = configparser.ConfigParser()
             config.add_section("weback_token")
+            config.set("weback_token", "user", str(self.user))
             config.set("weback_token", "jwt_token", str(self.jwt_token))
             config.set("weback_token", "token_exp", str(self.token_exp))
             config.set("weback_token", "api_url", str(self.api_url))
@@ -274,6 +278,7 @@ class WebackWssCtrl(WebackApi):
     """
     Weback WSS class
     """
+
     # Clean mode
     CLEAN_MODE_AUTO = "AutoClean"
     CLEAN_MODE_EDGE = "EdgeClean"
