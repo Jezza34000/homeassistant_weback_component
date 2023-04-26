@@ -30,10 +30,10 @@ weback_vacuum:
   username: <your WeBack email, required>
   password: <your WeBack password, required>
   region: <your country phone code e.g. for france code is 33, required>
-  application: <configuration app, optionnal>
-  client_id: <api client, optionnal>
-  api_version: <api version used, optionnal> 
-  language : <language code 2 chars, optionnal>
+  application: <configuration app, optional>
+  client_id: <api client, optional>
+  api_version: <api version used, optional> 
+  language : <language code 2 chars, optional>
 ```
 
 **username** : Login used to setup your robot application. \
@@ -60,7 +60,7 @@ After restart, a new vacuum entity is created with the name defined into WeBack 
 ## Important : API change since 2022
 
 If you have bought and create your robot account prior to 2022 it's possible you are still registered on the old API system, and you account will have problem or not work. \
-if you concerned, to ensure proper working, please follow thoses steps: \
+if you concerned, to ensure proper working, please follow those steps: \
 Go to WeBack app :
 * Remove you robot from account
 * Logout from account
