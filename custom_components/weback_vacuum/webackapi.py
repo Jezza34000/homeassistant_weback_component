@@ -24,8 +24,8 @@ SOCK_ERROR = "Error"
 # API Answer
 SUCCESS_OK = "success"
 SERVICE_ERROR = "ServiceErrorException"
-USER_NOT_EXIST = "UserNotExist"
-PASSWORD_NOK = "PasswordInvalid"
+USER_NOT_EXIST = "UserNotExist"  # nosec B105
+PASSWORD_NOK = "PasswordInvalid"  # nosec B105
 
 # API
 AUTH_URL = "https://user.grit-cloud.com/prod/oauth"
@@ -39,7 +39,7 @@ HTTP_TIMEOUT = 5
 class WebackApi:
     """
     WeBack API
-    Handle connexion with OAuth server to get WSS credentials
+    Handle connection with OAuth server to get WSS credentials
     """
 
     def __init__(self, user, password, region, country, app, client_id, api_version):
@@ -54,7 +54,7 @@ class WebackApi:
         self.client_id = client_id
         self.api_version = api_version
 
-        # API auth & connexion param
+        # API auth & connection param
         self.jwt_token = None
         self.region_name = None
         self.wss_url = None
@@ -70,7 +70,7 @@ class WebackApi:
             "json": {
                 "payload": {
                     "opt": "login",
-                    "pwd": hashlib.md5(self.password.encode()).hexdigest(),
+                    "pwd": hashlib.md5(self.password.encode()).hexdigest(),  # nosec B324
                 },
                 "header": {
                     "language": self.country,
@@ -335,7 +335,7 @@ class WebackWssCtrl(WebackApi):
     # Error state
     ROBOT_ERROR = "Malfunction"
 
-    # Unknow state
+    # Unknown state
     ROBOT_UNKNOWN = "unknown"
 
     # Robot Error codes
@@ -471,7 +471,7 @@ class WebackWssCtrl(WebackApi):
 
     async def open_wss_thread(self):
         """
-        Connect WebSocket to Weback Server and create a thread to maintain connexion alive
+        Connect WebSocket to Weback Server and create a thread to maintain connection alive
         """
         if not await self.check_credentials():
             _LOGGER.error("WebackApi (WSS) Failed to obtain WSS credentials")
@@ -527,7 +527,7 @@ class WebackWssCtrl(WebackApi):
             return False
 
         for i in range(15):
-            logging.debug("WebackApi (WSS) awaiting connexion established... %d", i)
+            logging.debug("WebackApi (WSS) awaiting connection established... %d", i)
             if self.socket_state == SOCK_CONNECTED:
                 return True
             await asyncio.sleep(0.5)
@@ -558,7 +558,7 @@ class WebackWssCtrl(WebackApi):
 
     def on_open(self, ws):
         """Socket "On_Open" event"""
-        _LOGGER.debug("WebackApi (WSS) Connexion established OK")
+        _LOGGER.debug("WebackApi (WSS) connection established OK")
         self.socket_state = SOCK_CONNECTED
 
     def on_message(self, ws, message):
@@ -604,13 +604,13 @@ class WebackWssCtrl(WebackApi):
 
     async def publish_wss(self, dict_message):
         """
-        Publish payload over WSS connexion
+        Publish payload over WSS connection
         """
         json_message = json.dumps(dict_message)
         _LOGGER.debug("WebackApi (WSS) Publishing message : %s", json_message)
 
         if self.sent_counter >= 5:
-            # Server do not answer (maybe other app are open ???) re-start WSS connexion
+            # Server do not answer (maybe other app are open ???) re-start WSS connection
             _LOGGER.warning(
                 "WebackApi (WSS) Link is UP, but server has stopped answering request. "
                 "Maybe other WeBack app are opened ? (re-open it...)"
