@@ -26,7 +26,7 @@ class VacMapDraw:
 
     def draw_robot_position(self, col=(0xDA, 0x36, 0x25, 0xFF), radius=10):
         point = self.vac_map.get_robot_position_pixel()
-        if point == False:
+        if point is False:
             return
         coords = (
             point[0] - (radius / 2),
@@ -39,7 +39,7 @@ class VacMapDraw:
     def draw_room(self, room):
         self.draw.polygon(
             self.vac_map._virtual_to_pixel_list(room.get_room_bounds()),
-            tuple(random.choices(range(256), k=4)),
+            tuple(random.choices(range(256), k=4)),  # nosec B311
             (255, 255, 0, 128),
         )
 
