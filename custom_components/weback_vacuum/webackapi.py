@@ -255,7 +255,7 @@ class WebackApi:
                         # Server status OK
                         _LOGGER.debug("WebackApi : Send HTTP OK, return=200")
                         _LOGGER.debug("WebackApi : HTTP data received = %s", req.json())
-                        return json.load(req.json())
+                        return req.json()
                     # Server status NOK
                     _LOGGER.warning(
                         "WebackApi : Bad server response (status code=%s) retry... (%s/%s)",
