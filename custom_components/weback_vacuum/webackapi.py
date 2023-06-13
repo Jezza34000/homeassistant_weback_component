@@ -124,28 +124,29 @@ class WebackApi:
         # Login NOK
         _LOGGER.error("WebackApi can't login (reason is :%s)", resp["msg"])
         return False
-
+    
     def verify_cached_creds(self):
         """
         Check if cached creds are not outdated
         """
         creds_data = self.get_token_file()
         if "weback_token" in creds_data:
+            weback_token = creds_data["weback_token"]
             if (
-                self.check_token_is_valid(creds_data["weback_token"]["token_exp"])
-                and self.user == creds_data["weback_token"]["user"]
+                    self.check_token_is_valid(weback_token.get("token_exp"))
+                    and self.user == weback_token.get("user")
             ):
                 # Valid creds to use, loading it
-                self.jwt_token = creds_data["weback_token"]["jwt_token"]
-                self.region_name = creds_data["weback_token"]["region_name"]
-                self.wss_url = creds_data["weback_token"]["wss_url"]
-                self.api_url = creds_data["weback_token"]["api_url"]
-                self.token_exp = creds_data["weback_token"]["token_exp"]
+                self.jwt_token = weback_token.get("jwt_token")
+                self.region_name = weback_token.get("region_name")
+                self.wss_url = weback_token.get("wss_url")
+                self.api_url = weback_token.get("api_url")
+                self.token_exp = weback_token.get("token_exp")
                 _LOGGER.debug("WebackApi use cached creds.")
                 return True
         _LOGGER.debug("WebackApi has no or invalid cached creds, renew it...")
         return False
-
+    
     @staticmethod
     def get_token_file() -> dict:
         """
