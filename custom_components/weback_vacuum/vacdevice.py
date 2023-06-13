@@ -126,22 +126,21 @@ class VacDevice(WebackWssCtrl):
     @property
     def is_available(self):
         """Boolean define if robot is connected to cloud"""
-        if "connected" in self.robot_status:
-            return self.robot_status["connected"] == "true"
-        return False
-
+        connected = self.robot_status.get("connected")
+        return connected == "true" if connected is not None else False
+    
     @property
     def is_charging(self):
         """Boolean define if robot is charging"""
         return self.current_mode in self.CHARGING_STATES
-
+    
     @property
     def error_info(self):
         """Raw error_info field string"""
         if "error_info" in self.robot_status:
             return self.robot_status["error_info"]
         return None
-
+    
     @property
     def battery_level(self):
         """Raw battery_level field integer"""
