@@ -30,10 +30,14 @@ body:
         > [Settings > About](https://my.home-assistant.io/redirect/info)
 
   - type: textarea
+    validations:
+      required: true
     attributes:
       label: Describe the problem
 
   - type: textarea
+    validations:
+      required: true
     attributes:
       label: Home Assistant Logs
       description: |
