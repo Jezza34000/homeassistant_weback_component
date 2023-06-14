@@ -36,6 +36,8 @@ repos:
     hooks:
       - id: pylint
         args:
+          # E0401 - ignore Unable to import
+          - --disable=E0401
           - --fail-under=7
           - --rcfile=./.pylintrc
 -   repo: https://github.com/hadialqattan/pycln
