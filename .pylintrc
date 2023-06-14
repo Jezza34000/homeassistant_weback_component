@@ -1,0 +1,2 @@
+[pre-commit-hook]
+command=custom_pylint
