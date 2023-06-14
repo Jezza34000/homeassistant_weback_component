@@ -16,6 +16,15 @@ body:
       placeholder: e.g X600
 
   - type: input
+    validations:
+      required: true
+    attributes:
+      label: Smartphone application
+      placeholder: e.g Weback
+      description: |
+        > Application's name used to control vacuum
+
+  - type: input
     attributes:
       label: Component version
       placeholder: e.g 1.1.1
