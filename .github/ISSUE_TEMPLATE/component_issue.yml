@@ -37,6 +37,6 @@ body:
     attributes:
       label: Home Assistant Logs
       description: |
-        > Settings > System > Logs](https://my.home-assistant.io/redirect/logs) > 🔍 Filter `Weback`
+        > ⚠️⚠️ **Take care to do not publish any token/password even hashed** ⚠️⚠️
+        > Settings > System > Logs](https://my.home-assistant.io/redirect/logs) > 🔍 Filter `weback`
         > Logs must be set in DEBUG mode
-        > !! Take care to do not publish any private token !!
