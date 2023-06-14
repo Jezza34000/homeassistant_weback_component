@@ -5,13 +5,13 @@
 Home Assistant component for controlling robot from brand like : Neatsvor / Tesvor / Orfeld / Abir...
 This component can control robot using WeBack app.
 
-> Warning : Some models from marks above (such as : Tesvor M1 & Neastsvor X600 PRO) are using a different platform (SmartLife/Tuya) and can't be controlled with this integration. 
+> Warning : Some models from marks above (such as : Tesvor M1 & Neastsvor X600 PRO) are using a different platform (SmartLife/Tuya) and can't be controlled with this integration.
 
 ## Installation (with HACS)
 
-1. Got to HACS 
-2. Integrations 
-3. EXPLORE & DOWNLOAD REPOSITORIES 
+1. Got to HACS
+2. Integrations
+3. EXPLORE & DOWNLOAD REPOSITORIES
 4. Enter "Weback"
 5. DOWNLOAD THIS REPOSITORY
 
@@ -32,7 +32,7 @@ weback_vacuum:
   region: <your country phone code e.g. for france code is 33, required>
   application: <configuration app, optional>
   client_id: <api client, optional>
-  api_version: <api version used, optional> 
+  api_version: <api version used, optional>
   language : <language code 2 chars, optional>
 ```
 
@@ -51,7 +51,7 @@ weback_vacuum:
   region: 33
 ```
 
-> Do not use any leading/ending characters like < > " ' + 
+> Do not use any leading/ending characters like < > " ' +
 
 Once configuration set you can restart Home Assistant.
 After restart, a new vacuum entity is created with the name defined into WeBack apps.
@@ -121,6 +121,3 @@ logger:
    logs:
      custom_components.weback_vacuum: debug
 ```
-
-
-
