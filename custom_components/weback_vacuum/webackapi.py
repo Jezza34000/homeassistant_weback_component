@@ -6,6 +6,7 @@ import configparser
 import hashlib
 import json
 import logging
+import os
 import threading
 import time
 from datetime import datetime, timedelta
@@ -34,6 +35,10 @@ MAP_DATA = "map_data"
 N_RETRY = 8
 ACK_TIMEOUT = 5
 HTTP_TIMEOUT = 5
+
+# ROOT DIR
+CREDS_FILE = "wb_creds"
+COMPONENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 class WebackApi:
@@ -70,7 +75,9 @@ class WebackApi:
             "json": {
                 "payload": {
                     "opt": "login",
-                    "pwd": hashlib.md5(self.password.encode()).hexdigest(),  # nosec B324
+                    "pwd": hashlib.md5(
+                        self.password.encode()
+                    ).hexdigest(),  # nosec B324
                 },
                 "header": {
                     "language": self.country,
@@ -89,7 +96,16 @@ class WebackApi:
 
         resp = await self.send_http(AUTH_URL, **params)
 
-        if resp["msg"] == SUCCESS_OK:
+        if resp is None:
+            _LOGGER.error(
+                "WebackApi login failed, server sent an empty answer, "
+                "check your 'calling code' in your configuration.yaml"
+            )
+            return False
+
+        result_msg = resp.get("msg")
+
+        if result_msg == SUCCESS_OK:
             # Login OK
             self.jwt_token = resp["data"]["jwt_token"]
             self.region_name = resp["data"]["region_name"]
@@ -104,27 +120,27 @@ class WebackApi:
 
             self.save_token_file()
             return True
-        if resp["msg"] == SERVICE_ERROR:
+        if result_msg == SERVICE_ERROR:
             # Wrong APP
             _LOGGER.error(
                 "WebackApi login failed, application is not recognized, "
                 "try to change 'application' field (this field is case sensitive) in your configuration.yaml"
             )
             return False
-        if resp["msg"] == USER_NOT_EXIST:
+        if result_msg == USER_NOT_EXIST:
             # User NOK
             _LOGGER.error(
-                "WebackApi login failed, user does not exist, check you login and you area code ?"
+                "WebackApi login failed, user does not exist, check your login and your area code?"
             )
             return False
-        if resp["msg"] == PASSWORD_NOK:
+        if result_msg == PASSWORD_NOK:
             # Password NOK
             _LOGGER.error("WebackApi login failed, wrong password")
             return False
         # Login NOK
-        _LOGGER.error("WebackApi can't login (reason is :%s)", resp["msg"])
+        _LOGGER.error("WebackApi can't login (reason is: %s)", result_msg)
         return False
-    
+
     def verify_cached_creds(self):
         """
         Check if cached creds are not outdated
@@ -132,10 +148,9 @@ class WebackApi:
         creds_data = self.get_token_file()
         if "weback_token" in creds_data:
             weback_token = creds_data["weback_token"]
-            if (
-                    self.check_token_is_valid(weback_token.get("token_exp"))
-                    and self.user == weback_token.get("user")
-            ):
+            if self.check_token_is_valid(
+                weback_token.get("token_exp")
+            ) and self.user == weback_token.get("user"):
                 # Valid creds to use, loading it
                 self.jwt_token = weback_token.get("jwt_token")
                 self.region_name = weback_token.get("region_name")
@@ -146,7 +161,7 @@ class WebackApi:
                 return True
         _LOGGER.debug("WebackApi has no or invalid cached creds, renew it...")
         return False
-    
+
     @staticmethod
     def get_token_file() -> dict:
         """
@@ -155,10 +170,12 @@ class WebackApi:
         creds_data = {}
         try:
             config = configparser.ConfigParser()
-            config.read("weback_creds")
+            config.read(os.path.join(COMPONENT_DIR, CREDS_FILE))
             creds_data = config._sections
-        except:
-            _LOGGER.debug("WebackApi not found or invalid weback creds file")
+        except Exception as get_err:
+            _LOGGER.debug(
+                "WebackApi not found or invalid weback creds file error=%s", get_err
+            )
         return creds_data
 
     def save_token_file(self):
@@ -174,7 +191,9 @@ class WebackApi:
             config.set("weback_token", "api_url", str(self.api_url))
             config.set("weback_token", "wss_url", str(self.wss_url))
             config.set("weback_token", "region_name", str(self.region_name))
-            with open("weback_creds", "w", encoding="utf-8") as configfile:
+            with open(
+                os.path.join(COMPONENT_DIR, CREDS_FILE), "w", encoding="utf-8"
+            ) as configfile:
                 config.write(configfile)
             _LOGGER.debug("WebackApi saved new creds")
         except Exception as excpt_msg:
