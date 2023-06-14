@@ -53,8 +53,10 @@ class VacDevice(WebackWssCtrl):
         )
         try:
             await self.refresh_handler(self.name, self.sub_type)
-        except:
-            _LOGGER.exception("Error on watch_state starting refresh_handler")
+        except Exception as watch_excpt:
+            _LOGGER.exception(
+                "Error on watch_state starting refresh_handler %s", watch_excpt
+            )
 
     async def load_maps(self):
         """Load the current reuse map"""
@@ -128,19 +130,19 @@ class VacDevice(WebackWssCtrl):
         """Boolean define if robot is connected to cloud"""
         connected = self.robot_status.get("connected")
         return connected == "true" if connected is not None else False
-    
+
     @property
     def is_charging(self):
         """Boolean define if robot is charging"""
         return self.current_mode in self.CHARGING_STATES
-    
+
     @property
     def error_info(self):
         """Raw error_info field string"""
         if "error_info" in self.robot_status:
             return self.robot_status["error_info"]
         return None
-    
+
     @property
     def battery_level(self):
         """Raw battery_level field integer"""

@@ -3,11 +3,16 @@ import logging
 
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
-from homeassistant.components.vacuum import (STATE_CLEANING, STATE_DOCKED,
-                                             STATE_ERROR, STATE_IDLE,
-                                             STATE_PAUSED, STATE_RETURNING,
-                                             StateVacuumEntity,
-                                             VacuumEntityFeature)
+from homeassistant.components.vacuum import (
+    STATE_CLEANING,
+    STATE_DOCKED,
+    STATE_ERROR,
+    STATE_IDLE,
+    STATE_PAUSED,
+    STATE_RETURNING,
+    StateVacuumEntity,
+    VacuumEntityFeature,
+)
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.icon import icon_for_battery_level
 

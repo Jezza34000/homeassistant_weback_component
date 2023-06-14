@@ -4,8 +4,12 @@ from datetime import timedelta
 
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
-from homeassistant.const import (CONF_API_VERSION, CONF_CLIENT_ID,
-                                 CONF_PASSWORD, CONF_USERNAME)
+from homeassistant.const import (
+    CONF_API_VERSION,
+    CONF_CLIENT_ID,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 
 from .vacdevice import VacDevice
 from .webackapi import WebackApi

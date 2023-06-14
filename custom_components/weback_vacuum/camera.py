@@ -1,19 +1,26 @@
 """Support for Weback Vacuum Robot map camera."""
-import io
 import logging
 import resource
-import time
 
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
-from homeassistant.components.camera import (ENTITY_ID_FORMAT, PLATFORM_SCHEMA,
-                                             SUPPORT_ON_OFF, Camera,
-                                             CameraEntityFeature)
-from homeassistant.components.vacuum import (STATE_CLEANING, STATE_DOCKED,
-                                             STATE_ERROR, STATE_IDLE,
-                                             STATE_PAUSED, STATE_RETURNING,
-                                             StateVacuumEntity,
-                                             VacuumEntityFeature)
+from homeassistant.components.camera import (
+    ENTITY_ID_FORMAT,
+    PLATFORM_SCHEMA,
+    SUPPORT_ON_OFF,
+    Camera,
+    CameraEntityFeature,
+)
+from homeassistant.components.vacuum import (
+    STATE_CLEANING,
+    STATE_DOCKED,
+    STATE_ERROR,
+    STATE_IDLE,
+    STATE_PAUSED,
+    STATE_RETURNING,
+    StateVacuumEntity,
+    VacuumEntityFeature,
+)
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.icon import icon_for_battery_level
