@@ -1,0 +1,42 @@
+name: Component issue
+description: Report an issue you have with the component
+body:
+  - type: input
+    validations:
+      required: true
+    attributes:
+      label: Device brand
+      placeholder: e.g Neatsvor
+
+  - type: input
+    validations:
+      required: true
+    attributes:
+      label: Device model
+      placeholder: e.g X600
+
+  - type: input
+    attributes:
+      label: Component version
+      placeholder: e.g 1.1.1
+      description: |
+        > [Settings > System > Repairs > Three Dots in Upper Right > System information](https://my.home-assistant.io/redirect/system_health) > `WeBack`
+
+  - type: input
+    attributes:
+      label: HA core version
+      placeholder: e.g 2023.6.1
+      description: |
+        > [Settings > About](https://my.home-assistant.io/redirect/info)
+
+  - type: textarea
+    attributes:
+      label: Describe the problem
+
+  - type: textarea
+    attributes:
+      label: Home Assistant Logs
+      description: |
+        > Settings > System > Logs](https://my.home-assistant.io/redirect/logs) > 🔍 Filter `Weback`
+        > Logs must be set in DEBUG mode
+        > !! Take care to do not publish any private token !!
