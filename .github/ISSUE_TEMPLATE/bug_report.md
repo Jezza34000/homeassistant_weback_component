@@ -7,8 +7,14 @@ assignees: ''
 
 ---
 
+**Device brand**
+_e.g. Neatsvor_
+
 **Device model**
-_e.g. Neatsvor X600_
+_e.g. X600_
+
+**Smartphone application name (used to control robot)**
+_e.g. WeBack, Tesvor, ..._
 
 **Component version**
 _Settings > System > Repairs > Three Dots in Upper Right > System information > WeBack (e.g 1.1.1)_
