@@ -5,7 +5,22 @@
 Home Assistant component for controlling robot from brand like : Neatsvor / Tesvor / Orfeld / Abir...
 This component can control robot using WeBack app.
 
-> Warning : Some models from marks above (such as : Tesvor M1 & Neastsvor X600 PRO) are using a different platform (SmartLife/Tuya) and can't be controlled with this integration.
+> # Important Notice : Discontinuation of WeBack Service and Impact on this Home Assistant Component
+
+_Dear Home Assistant Community,_
+
+_I would like to bring your attention to an important update regarding the WeBack service and its impact on the Home Assistant component you have been using to control robot vacuum cleaners via their unofficial API._
+
+_Due to WeBack's decision to cease its operations, it is no longer possible to register new robots on their cloud platform. However, i want to clarify that currently, for an unknown duration, the previously registered robots can still function using WeBack's cloud infrastructure. Therefore, it is crucial not to change your WeBack account if you wish to continue utilizing the WeBack application with your existing robots._
+
+_Considering this change, the Home Assistant component specifically designed for WeBack integration no longer serves a practical purpose since the registration of new robots is no longer possible. As a result, the maintenance and further development of this component will be discontinued._
+
+_Furthermore, depending on the robot manufacturers and their respective customer support, there might be alternative solutions available to modify the firmware and migrate to different platforms. It is advisable to contact the manufacturer's support team directly to explore potential options based on their chosen direction. For instance, in the case of Neatsvor X600 robot, an update is offered to transition from WeBack to Tuya._
+
+_Thank you for your understanding_
+
+
+
 
 ## Installation (with HACS)
 
@@ -56,17 +71,6 @@ weback_vacuum:
 Once configuration set you can restart Home Assistant.
 After restart, a new vacuum entity is created with the name defined into WeBack apps.
 
-
-## Important : API change since 2022
-
-If you have bought and create your robot account prior to 2022 it's possible you are still registered on the old API system, and you account will have problem or not work. \
-if you concerned, to ensure proper working, please follow those steps: \
-Go to WeBack app :
-* Remove you robot from account
-* Logout from account
-* Remove your account
-* Create a new account
-* Add your robot to your new account
 
 ## Maps and Rooms
 
