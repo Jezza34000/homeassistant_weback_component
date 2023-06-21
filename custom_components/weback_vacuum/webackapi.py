@@ -99,7 +99,7 @@ class WebackApi:
         if resp is None:
             _LOGGER.error(
                 "WebackApi login failed, server sent an empty answer, "
-                "check your 'calling code' in your configuration.yaml"
+                "please check repo's README.md about WeBack's discontinuation service"
             )
             return False
 
@@ -124,13 +124,14 @@ class WebackApi:
             # Wrong APP
             _LOGGER.error(
                 "WebackApi login failed, application is not recognized, "
-                "try to change 'application' field (this field is case sensitive) in your configuration.yaml"
+                "please check repo's README.md about WeBack's discontinuation service"
             )
             return False
         if result_msg == USER_NOT_EXIST:
             # User NOK
             _LOGGER.error(
-                "WebackApi login failed, user does not exist, check your login and your area code?"
+                "WebackApi login failed, user does not exist "
+                "please check repo's README.md about WeBack's discontinuation service"
             )
             return False
         if result_msg == PASSWORD_NOK:
@@ -290,7 +291,11 @@ class WebackApi:
                     attempt,
                     N_RETRY,
                 )
-        _LOGGER.error("WebackApi : HTTP error after %s retry", N_RETRY)
+        _LOGGER.error(
+            "WebackApi : HTTP error after %s retry please check repo's "
+            "README.md about WeBack's discontinuation service",
+            N_RETRY,
+        )
         return {"msg": "error", "details": f"Failed after {N_RETRY} retry"}
 
 
