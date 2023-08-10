@@ -268,7 +268,7 @@ class WebackVacuumRobot(StateVacuumEntity):
     async def async_turn_off(self, **kwargs):
         """Turn the vacuum off stopping the cleaning and returning home."""
         _LOGGER.debug("Vacuum: async_turn_off")
-        self.return_to_base()
+        await self.device.return_to_base()
 
     async def async_return_to_base(self, **kwargs):
         """Set the vacuum cleaner to return to the dock."""
