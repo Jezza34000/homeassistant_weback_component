@@ -1,6 +1,6 @@
 """Support for WeBack robot vacuums."""
+
 import logging
-from datetime import timedelta
 
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
@@ -38,8 +38,8 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_APP, default=DEFAULT_APP): cv.string,
                 vol.Optional(CONF_CLIENT_ID, default=DEFAULT_CLIENT_ID): cv.string,
                 vol.Optional(CONF_API_VERSION, default=DEFAULT_API_VERS): cv.string,
-            }
-        )
+            },
+        ),
     },
     extra=vol.ALLOW_EXTRA,
 )
