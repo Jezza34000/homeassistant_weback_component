@@ -50,13 +50,16 @@ class VacDevice(WebackWssCtrl):
     async def watch_state(self):
         """State watcher from VacDevice"""
         _LOGGER.debug(
-            "VacDevice: starting state watcher for= %s (%s)", self.name, self.sub_type
+            "VacDevice: starting state watcher for= %s (%s)",
+            self.name,
+            self.sub_type,
         )
         try:
             await self.refresh_handler(self.name, self.sub_type)
         except Exception as watch_excpt:
             _LOGGER.exception(
-                "Error on watch_state starting refresh_handler %s", watch_excpt
+                "Error on watch_state starting refresh_handler %s",
+                watch_excpt,
             )
 
     def on_message(self, ws, message):
@@ -76,7 +79,9 @@ class VacDevice(WebackWssCtrl):
             return False
 
         map_data = await self.get_reuse_map_by_id(
-            self.robot_status[self.ACTIVE_MAP_ID_PROP], self.sub_type, self.name
+            self.robot_status[self.ACTIVE_MAP_ID_PROP],
+            self.sub_type,
+            self.name,
         )
         if map_data:
             self.map = VacMap(map_data)
@@ -237,37 +242,31 @@ class VacDevice(WebackWssCtrl):
         """Turn ON vacuum"""
         working_payload = {self.ASK_STATUS: self.CLEAN_MODE_AUTO}
         await self.send_command(self.name, self.sub_type, working_payload)
-        return
 
     async def turn_off(self):
         """Turn OFF vacuum"""
         working_payload = {self.ASK_STATUS: self.CHARGE_MODE_RETURNING}
         await self.send_command(self.name, self.sub_type, working_payload)
-        return
 
     async def pause(self):
         """Pause vacuum"""
         working_payload = {self.ASK_STATUS: self.CLEAN_MODE_STOP}
         await self.send_command(self.name, self.sub_type, working_payload)
-        return
 
     async def clean_spot(self):
         """Clean spot command"""
         working_payload = {self.ASK_STATUS: self.CLEAN_MODE_SPOT}
         await self.send_command(self.name, self.sub_type, working_payload)
-        return
 
     async def locate(self):
         """Locate vacuum"""
         working_payload = {self.ASK_STATUS: self.ROBOT_LOCATION_SOUND}
         await self.send_command(self.name, self.sub_type, working_payload)
-        return
 
     async def return_to_base(self):
         """Return to base command"""
         working_payload = {self.ASK_STATUS: self.CHARGE_MODE_RETURNING}
         await self.send_command(self.name, self.sub_type, working_payload)
-        return
 
     async def goto(self, point: str):
         """GoTo point command"""
@@ -276,7 +275,6 @@ class VacDevice(WebackWssCtrl):
             self.GOTO_POINT: point,
         }
         await self.send_command(self.name, self.sub_type, working_payload)
-        return
 
     async def clean_rect(self, rectangle: str):
         """Clean rectangle command"""
@@ -285,7 +283,6 @@ class VacDevice(WebackWssCtrl):
             self.RECTANGLE_INFO: rectangle,
         }
         await self.send_command(self.name, self.sub_type, working_payload)
-        return
 
     async def voice_mode(self, state: str):
         """Voice mode"""
@@ -294,7 +291,6 @@ class VacDevice(WebackWssCtrl):
             await self.send_command(self.name, self.sub_type, working_payload)
         else:
             _LOGGER.error("Voice mode can't be set with value : %s ", state)
-        return
 
     async def undisturb_mode(self, state: str):
         """Undisturb mode"""
@@ -303,7 +299,6 @@ class VacDevice(WebackWssCtrl):
             await self.send_command(self.name, self.sub_type, working_payload)
         else:
             _LOGGER.error("Undisturb mode can't be set with value : %s ", state)
-        return
 
     async def clean_room(self, room_ids_list: list):
         """Clean room command"""
