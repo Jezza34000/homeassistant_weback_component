@@ -39,7 +39,7 @@ class VacMapDraw:
     def draw_room(self, room):
         self.draw.polygon(
             self.vac_map._virtual_to_pixel_list(room.get_room_bounds()),
-            tuple(random.choices(range(256), k=4)),  # nosec B311
+            tuple(random.choices(range(256), k=4)),  # noqa: S311
             (255, 255, 0, 128),
         )
 
@@ -90,16 +90,14 @@ class VacMapRoom:
             return self.data["room_name"]
         return None
 
-    def get_room_bounds(self, tuple=True):
-        r = list()
-        for i in range(0, len(self.data["room_point_x"])):
-            if tuple:
-                r.append((self.data["room_point_x"][i], self.data["room_point_y"][i]))
+    def get_room_bounds(self, use_tuple=True):
+        bounds = []
+        for x, y in zip(self.data["room_point_x"], self.data["room_point_y"]):
+            if use_tuple:
+                bounds.append((x, y))
             else:
-                r.append(
-                    list([self.data["room_point_x"][i], self.data["room_point_y"][i]])
-                )
-        return r
+                bounds.append([x, y])
+        return bounds
 
     def get_room_label_offset(self):
         bounds = self.get_room_bounds()
@@ -113,7 +111,7 @@ class VacMapRoom:
 
     def get_xaiomi_vacuum_map_card_rooms(self):
         label_offset = self.get_room_label_offset()
-        ret = {
+        return {
             "id": self.get_room_id(),
             "outline": self.get_room_bounds(False),
             "label": {
@@ -122,8 +120,6 @@ class VacMapRoom:
                 "y": label_offset[1],
             },
         }
-
-        return ret
 
 
 class VacMap:
@@ -138,13 +134,11 @@ class VacMap:
     PATH_RELOCATING = 0x40
     PATH_VACUUMING = 0x0
 
-    ALLOW_MAP_FORMATS = {MAP_FORMAT_YW_LASER, MAP_FORMAT_BV_LASER}
+    def __init__(self, data_input):
+        self.load_data(data_input)
 
-    def __init__(self, input):
-        self.load_data(input)
-
-    def load_data(self, input):
-        self.data = json.loads(zlib.decompress(base64.b64decode(input)))
+    def load_data(self, data_input):
+        self.data = json.loads(zlib.decompress(base64.b64decode(data_input)))
         self.map_data = bytearray(base64.b64decode(self.data["MapData"]))
         self.map_bitmap = False
         self.map_scale = 4
@@ -152,10 +146,10 @@ class VacMap:
             self.data["PointData"] = base64.b64decode(self.data["PointData"])
             self.data["PointType"] = base64.b64decode(self.data["PointType"])
 
-    def wss_update(self, input):
+    def wss_update(self, data_input):
         existing_room_data = self.data["room_zone_info"]
 
-        self.load_data(input)
+        self.load_data(data_input)
 
         for i, room in enumerate(self.data["room_zone_info"]):
             existing_room = next(
@@ -171,7 +165,7 @@ class VacMap:
     def get_map_bitmap(self):
         """Parse MapData into 8-Bit lightness (grayscale) bitmap, return it as bytes"""
         self.map_bitmap = bytearray(b"")
-        for i in range(0, len(self.map_data)):
+        for i in range(len(self.map_data)):
             byte = self.map_data[i]
 
             self.map_bitmap.append(((byte & 192) >> 6) * 85)
@@ -208,14 +202,13 @@ class VacMap:
         img.putdata(new_img_data)
         del new_img_data
 
-        img = img.resize(
+        return img.resize(
             (
                 int((self.get_map_width()) * self.map_scale),
                 int((self.get_map_height()) * self.map_scale),
             ),
             Image.NEAREST,
         )
-        return img
 
     def get_map_width(self):
         return self.data["MapWidth"]
@@ -231,29 +224,28 @@ class VacMap:
             room for room in self.data["room_zone_info"] if room["room_name"] == name
         )["room_id"]
 
-    def get_room_by_id(self, id):
+    def get_room_by_id(self, room_id):
         return VacMapRoom(
-            next(room for room in self.data["room_zone_info"] if room["room_id"] == id)
+            next(
+                room
+                for room in self.data["room_zone_info"]
+                if room["room_id"] == room_id
+            ),
         )
 
     def get_rooms(self):
-        rooms = list()
-
-        for room in self.data["room_zone_info"]:
-            rooms.append(VacMapRoom(room))
-
-        return rooms
+        return [VacMapRoom(room) for room in self.data.get("room_zone_info")]
 
     def get_room_by_name(self, name):
-        if id := self.get_room_id_by_name(name):
-            return self.get_room_by_id(id)
+        if r_id := self.get_room_id_by_name(name):
+            return self.get_room_by_id(r_id)
         return None
 
     def get_charger_point_pixel(self):
         return self._scale_up_pixel_coords(
             self._pixel_apply_offset(
-                (self.data["ChargerPoint"][0], self.data["ChargerPoint"][1])
-            )
+                (self.data["ChargerPoint"][0], self.data["ChargerPoint"][1]),
+            ),
         )
 
     def get_charger_point_virtual(self):
@@ -270,13 +262,12 @@ class VacMap:
 
     def get_path(self):
         if "PointData" not in self.data:
-            return list(), list()
+            return [], []
 
         point_data = io.BytesIO(self.data["PointData"])
-        coords = list()
-        point_types = list()
+        point_types = []
 
-        coords.append(self.get_charger_point_pixel())
+        coords = [self.get_charger_point_pixel()]
 
         while x := point_data.read(2):
             coords.append(
@@ -284,11 +275,11 @@ class VacMap:
                     (
                         struct.unpack("h", x)[0],
                         struct.unpack("h", point_data.read(2))[0],
-                    )
-                )
+                    ),
+                ),
             )
 
-        for i, coord in enumerate(coords):
+        for i, _ in enumerate(coords):
             byte = int(i * 2 / 8)
             bit = int((i * 2 / 8 % 1) * 8)
 
@@ -312,20 +303,20 @@ class VacMap:
         return x * self.map_scale, y * self.map_scale
 
     def _virtual_to_pixel_list(self, coords):
-        ret = list()
-        for coord in coords:
-            ret.append(self._virtual_to_pixel(coord))
-        return ret
+        return [self._virtual_to_pixel(coord) for coord in coords]
 
     def _virtual_to_pixel(self, coords):
-        """Convert virtual (laser map coordinates) to pixel coords, taking origin into account"""
+        """
+        Convert virtual (laser map coordinates) to pixel coords,
+        taking origin into account
+        """
         x, y = coords
         x, y = round(
             (self.data["MapOrigin"][0] + (x * 2 * self.get_map_resolution()))
-            * self.map_scale
+            * self.map_scale,
         ), round(
             (self.data["MapOrigin"][1] + (y * 2 * self.get_map_resolution()))
-            * self.map_scale
+            * self.map_scale,
         )
         return x, y
 
@@ -345,17 +336,17 @@ class VacMap:
             {
                 "vacuum": {"x": 0, "y": 0},
                 "map": {"x": int(map_point[0]), "y": int(map_point[1])},
-            }
+            },
         )
 
         map_point = self._virtual_to_pixel(
-            (self.get_map_width(), self.get_map_height())
+            (self.get_map_width(), self.get_map_height()),
         )
         cal.append(
             {
                 "vacuum": {"x": self.get_map_width(), "y": self.get_map_height()},
                 "map": {"x": int(map_point[0]), "y": int(map_point[1])},
-            }
+            },
         )
 
         map_point = self._virtual_to_pixel((0, self.get_map_height()))
@@ -363,7 +354,7 @@ class VacMap:
             {
                 "vacuum": {"x": 0, "y": self.get_map_height()},
                 "map": {"x": int(map_point[0]), "y": int(map_point[1])},
-            }
+            },
         )
 
         map_point = self._virtual_to_pixel((self.get_map_width(), 0))
@@ -371,16 +362,10 @@ class VacMap:
             {
                 "vacuum": {"x": self.get_map_width(), "y": 0},
                 "map": {"x": int(map_point[0]), "y": int(map_point[1])},
-            }
+            },
         )
 
         return cal
 
     def get_predefined_selections(self):
-        all_rooms = self.get_rooms()
-        predefined_selections = list()
-
-        for room in all_rooms:
-            predefined_selections.append(room.get_xaiomi_vacuum_map_card_rooms())
-
-        return predefined_selections
+        return [room.get_xaiomi_vacuum_map_card_rooms() for room in self.get_rooms()]
