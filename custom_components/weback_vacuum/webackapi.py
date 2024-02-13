@@ -1,6 +1,7 @@
 """
 Weback API class
 """
+
 import asyncio
 import configparser
 import hashlib
@@ -25,8 +26,8 @@ SOCK_ERROR = "Error"
 # API Answer
 SUCCESS_OK = "success"
 SERVICE_ERROR = "ServiceErrorException"
-USER_NOT_EXIST = "UserNotExist"  # nosec B105
-PASSWORD_NOK = "PasswordInvalid"  # nosec B105
+USER_NOT_EXIST = "UserNotExist"
+PASSWORD_NOK = "PasswordInvalid"  # noqa: S105
 
 # API
 AUTH_URL = "https://user.grit-cloud.com/prod/oauth"
@@ -76,7 +77,7 @@ class WebackApi:
                 "payload": {
                     "opt": "login",
                     "pwd": hashlib.md5(
-                        self.password.encode()
+                        self.password.encode(),
                     ).hexdigest(),  # nosec B324
                 },
                 "header": {
@@ -87,7 +88,7 @@ class WebackApi:
                     "account": self.user,
                     "client_id": self.client_id,
                 },
-            }
+            },
         }
 
         # Checking if there is cached token and is still valid
@@ -98,8 +99,7 @@ class WebackApi:
 
         if resp is None:
             _LOGGER.error(
-                "WebackApi login failed, server sent an empty answer, "
-                "please check repo's README.md about WeBack's discontinuation service"
+                "WebackApi login failed, server sent an empty answer",
             )
             return False
 
@@ -123,15 +123,13 @@ class WebackApi:
         if result_msg == SERVICE_ERROR:
             # Wrong APP
             _LOGGER.error(
-                "WebackApi login failed, application is not recognized, "
-                "please check repo's README.md about WeBack's discontinuation service"
+                "WebackApi login failed, application is not recognized",
             )
             return False
         if result_msg == USER_NOT_EXIST:
             # User NOK
             _LOGGER.error(
-                "WebackApi login failed, user does not exist "
-                "please check repo's README.md about WeBack's discontinuation service"
+                "WebackApi login failed, user does not exist",
             )
             return False
         if result_msg == PASSWORD_NOK:
@@ -150,7 +148,7 @@ class WebackApi:
         if "weback_token" in creds_data:
             weback_token = creds_data["weback_token"]
             if self.check_token_is_valid(
-                weback_token.get("token_exp")
+                weback_token.get("token_exp"),
             ) and self.user == weback_token.get("user"):
                 # Valid creds to use, loading it
                 self.jwt_token = weback_token.get("jwt_token")
@@ -175,7 +173,8 @@ class WebackApi:
             creds_data = config._sections
         except Exception as get_err:
             _LOGGER.debug(
-                "WebackApi not found or invalid weback creds file error=%s", get_err
+                "WebackApi not found or invalid weback creds file error=%s",
+                get_err,
             )
         return creds_data
 
@@ -193,7 +192,9 @@ class WebackApi:
             config.set("weback_token", "wss_url", str(self.wss_url))
             config.set("weback_token", "region_name", str(self.region_name))
             with open(
-                os.path.join(COMPONENT_DIR, CREDS_FILE), "w", encoding="utf-8"
+                os.path.join(COMPONENT_DIR, CREDS_FILE),
+                "w",
+                encoding="utf-8",
             ) as configfile:
                 config.write(configfile)
             _LOGGER.debug("WebackApi saved new creds")
@@ -231,7 +232,8 @@ class WebackApi:
 
         if resp["msg"] == SUCCESS_OK:
             _LOGGER.debug(
-                "WebackApi get robot list OK : %s", resp["data"]["thing_list"]
+                "WebackApi get robot list OK : %s",
+                resp["data"]["thing_list"],
             )
             return resp["data"]["thing_list"]
         _LOGGER.error("WebackApi failed to get robot list (details : %s)", resp)
@@ -292,8 +294,7 @@ class WebackApi:
                     N_RETRY,
                 )
         _LOGGER.error(
-            "WebackApi : HTTP error after %s retry please check repo's "
-            "README.md about WeBack's discontinuation service",
+            "WebackApi : HTTP error after %s retry",
             N_RETRY,
         )
         return {"msg": "error", "details": f"Failed after {N_RETRY} retry"}
@@ -572,7 +573,8 @@ class WebackWssCtrl(WebackApi):
 
         if close_status_code or close_msg:
             _LOGGER.debug(
-                "WebackApi (WSS) Close Status_code: %s ", str(close_status_code)
+                "WebackApi (WSS) Close Status_code: %s ",
+                str(close_status_code),
             )
             _LOGGER.debug("WebackApi (WSS) Close Message: %s", str(close_msg))
         self.socket_state = SOCK_CLOSE
@@ -618,7 +620,8 @@ class WebackWssCtrl(WebackApi):
             self._call_subscriber()
         else:
             _LOGGER.error(
-                "WebackApi (WSS) Received an unknown message from server : %s", wss_data
+                "WebackApi (WSS) Received an unknown message from server : %s",
+                wss_data,
             )
 
         # Close WSS link if we don't need it anymore or it will get closed by remote side
@@ -638,7 +641,7 @@ class WebackWssCtrl(WebackApi):
             # Server do not answer (maybe other app are open ???) re-start WSS connection
             _LOGGER.warning(
                 "WebackApi (WSS) Link is UP, but server has stopped answering request. "
-                "Maybe other WeBack app are opened ? (re-open it...)"
+                "Maybe other WeBack app are opened ? (re-open it...)",
             )
             self.sent_counter = 0
             self.ws.close()
@@ -664,7 +667,8 @@ class WebackWssCtrl(WebackApi):
                 )
                 await self.connect_wss()
         _LOGGER.error(
-            "WebackApi (WSS) Failed to puslish message after %s retry", N_RETRY
+            "WebackApi (WSS) Failed to puslish message after %s retry",
+            N_RETRY,
         )
         return False
 
@@ -673,7 +677,9 @@ class WebackWssCtrl(WebackApi):
         Pack command to send
         """
         _LOGGER.debug(
-            "WebackApi (WSS) send_command=%s for robot=%s", working_payload, thing_name
+            "WebackApi (WSS) send_command=%s for robot=%s",
+            working_payload,
+            thing_name,
         )
         payload = {
             "topic_name": "$aws/things/" + thing_name + "/shadow/update",
@@ -685,7 +691,6 @@ class WebackWssCtrl(WebackApi):
         self._refresh_time = 5
         await self.publish_wss(payload)
         await self.force_cmd_refresh(thing_name, sub_type)
-        return
 
     async def force_cmd_refresh(self, thing_name, sub_type):
         """Force refresh"""
@@ -714,11 +719,11 @@ class WebackWssCtrl(WebackApi):
     def adapt_refresh_time(self, status):
         """Adapt refreshing time depending on robot status"""
         _LOGGER.debug("WebackApi (WSS) adapt for : %s", status)
-        if "working_status" in status:
-            if status["working_status"] not in self.DOCKED_STATES:
-                _LOGGER.debug("WebackApi (WSS) > Set refreshing to 5s")
-                self._refresh_time = 5
-                return
+        if status.get("working_status", None) not in self.DOCKED_STATES:
+            _LOGGER.debug("WebackApi (WSS) > Set refreshing to 5s")
+            self._refresh_time = 5
+            return
+
         _LOGGER.debug("WebackApi (WSS) > Set refreshing to 120s")
         self._refresh_time = 120
 
@@ -733,7 +738,7 @@ class WebackWssCtrl(WebackApi):
                     _LOGGER.debug("WebackApi (WSS) Refreshing...")
                     await self.update_status(thing_name, sub_type)
                 except Exception as refresh_excpt:
-                    _LOGGER.error(
+                    _LOGGER.exception(
                         "WebackApi (WSS) Error during refresh_handler (details=%s)",
                         refresh_excpt,
                     )
