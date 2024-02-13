@@ -1,8 +1,7 @@
 """Support for Weback Vacuum Robots."""
+
 import logging
 
-import homeassistant.helpers.config_validation as cv
-import voluptuous as vol
 from homeassistant.components.vacuum import (
     STATE_CLEANING,
     STATE_DOCKED,
@@ -13,7 +12,6 @@ from homeassistant.components.vacuum import (
     StateVacuumEntity,
     VacuumEntityFeature,
 )
-from homeassistant.helpers import entity_platform
 from homeassistant.helpers.icon import icon_for_battery_level
 
 from . import DOMAIN, VacDevice
@@ -118,8 +116,9 @@ class WebackVacuumRobot(StateVacuumEntity):
             _LOGGER.debug("Vacuum: state(from mapping)=%s", state_mapping)
             return state_mapping
         except KeyError:
-            _LOGGER.error(
-                "Found an unsupported state, state_code: %s", self.device.current_mode
+            _LOGGER.exception(
+                "Found an unsupported state, state_code: %s",
+                self.device.current_mode,
             )
             return None
 
@@ -137,7 +136,8 @@ class WebackVacuumRobot(StateVacuumEntity):
             self.is_charging,
         )
         return icon_for_battery_level(
-            battery_level=self.battery_level, charging=self.is_charging
+            battery_level=self.battery_level,
+            charging=self.is_charging,
         )
 
     @property
@@ -158,18 +158,23 @@ class WebackVacuumRobot(StateVacuumEntity):
 
     @property
     def fan_speed_list(self):
-        """Get the list of available fan speed or /water level steps of the vacuum cleaner."""
+        """
+        Get the list of available fan speed or
+        water level steps of the vacuum cleaner
+        """
         # Check if robot is in Vacuum/Mop mode
         if self.device.vacuum_or_mop == 1:
             # Vacuum mode
             _LOGGER.debug(
-                "Vacuum: (vacuum mode) fan_speed_list=%s", self.device.fan_speed_list
+                "Vacuum: (vacuum mode) fan_speed_list=%s",
+                self.device.fan_speed_list,
             )
             return self.device.fan_speed_list
         if self.device.vacuum_or_mop == 2:
             # Mop mode
             _LOGGER.debug(
-                "Vacuum: (mop mode) fan_speed_list=%s", self.device.mop_level_list
+                "Vacuum: (mop mode) fan_speed_list=%s",
+                self.device.mop_level_list,
             )
             return self.device.mop_level_list
         # No Mop / No Fan
@@ -202,10 +207,7 @@ class WebackVacuumRobot(StateVacuumEntity):
     def extra_state_attributes(self) -> dict:
         """Return the device-specific state attributes of this vacuum."""
 
-        if self.device.vacuum_or_mop == 1:
-            mode = "vacuum"
-        else:
-            mode = "mop"
+        mode = "vacuum" if self.device.vacuum_or_mop == 1 else "mop"
 
         extra_value = {
             "robot_mode": mode,
@@ -247,7 +249,8 @@ class WebackVacuumRobot(StateVacuumEntity):
             self._error = error
         _LOGGER.debug("Vacuum: on_error=%s", self._error)
         self.hass.bus.fire(
-            "weback_vacuum", {"entity_id": self.entity_id, "error": error}
+            "weback_vacuum",
+            {"entity_id": self.entity_id, "error": error},
         )
         self.schedule_update_ha_state(False)
 
@@ -284,7 +287,6 @@ class WebackVacuumRobot(StateVacuumEntity):
         """Locate the vacuum cleaner."""
         _LOGGER.debug("Vacuum: locate")
         await self.device.locate()
-        return
 
     async def async_set_fan_speed(self, fan_speed, **kwargs):
         """Set fan speed"""
