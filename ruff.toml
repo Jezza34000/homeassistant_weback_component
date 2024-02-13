@@ -7,11 +7,9 @@ select = [
     "N",     # pep8-naming (N)
     "UP",    # pyupgrade (UP)
     "YTT",   # flake8-2020 (YTT)
-#    "ANN",   # flake8-annotations (ANN)
     "ASYNC", # flake8-async (ASYNC)
     "S",     # flake8-bandit (S)
     "BLE",   # flake8-blind-except (BLE)
-    "FBT",   # flake8-boolean-trap (FBT)
     "B",     # flake8-bugbear (B)
     "A",     # flake8-builtins (A)
     "COM",   # flake8-commas (COM)
@@ -39,7 +37,6 @@ select = [
     "TID",   # flake8-tidy-imports (TID)
     "TCH",   # flake8-type-checking (TCH)
     "INT",   # flake8-gettext (INT)
-#    "ARG",   # flake8-unused-arguments (ARG)
     "ERA",   # eradicate (ERA)
     "PD",    # pandas-vet (PD)
     "PGH",   # pygrep-hooks (PGH)
@@ -53,6 +50,8 @@ select = [
 ]
 
 # Ignored rules
+#    "ANN",   # flake8-annotations (ANN)
+#    "ARG",   # flake8-unused-arguments (ARG)
 #    "D",     # pydocstyle (D)
 #    "PTH",   # flake8-use-pathlib (PTH)
 #    "BLE",   # flake8-blind-except (BLE)
@@ -63,5 +62,4 @@ select = [
 
 
 # Ignore error code
-# ANN101 -> Missing type annotation for `self` in method
-ignore = ["ANN101"]
+ignore = []
