@@ -61,8 +61,9 @@ After restart, a new vacuum entity is created with the name defined into WeBack 
 
 ## Maps and Rooms
 
-Maps are supported for `yw_ls` (LiDAR) vacuums. Others may work. Tested on:
+>  Maps are supported for LIDAR vacuum only.
 
+Tested on:
   - Electriq "Helga" iQlean-LR01
 
 Integration with [PiotrMachowski/lovelace-xiaomi-vacuum-map-card](https://github.com/PiotrMachowski/lovelace-xiaomi-vacuum-map-card) supports automatic map calibration and room boundaries.
