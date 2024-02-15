@@ -5,6 +5,10 @@
 Home Assistant component for controlling robot from brand like : Neatsvor / Tesvor / Orfeld / Abir...
 This component can control robot using WeBack app.
 
+> Please note that several of these robot brands also use the Tuya/Smartlife platform in parallel (depending on the model). If your robot works with Tuya/Smartlife this integration will not be compatible.
+
+> This integration is not compatible with Tesvor robot models that use the “TESVOR HOME” application
+
 ## Installation (with HACS)
 
 1. Got to HACS
