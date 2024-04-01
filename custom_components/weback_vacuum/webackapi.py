@@ -31,6 +31,7 @@ PASSWORD_NOK = "PasswordInvalid"  # noqa: S105
 
 # API
 AUTH_URL = "https://user.grit-cloud.com/prod/oauth"
+AUTH_URL_CHINA = "https://user.grit-cloud.cn/prod/oauth"
 ROBOT_UPDATE = "thing_status_update"
 MAP_DATA = "map_data"
 N_RETRY = 8
@@ -95,7 +96,13 @@ class WebackApi:
         if self.verify_cached_creds():
             return True
 
-        resp = await self.send_http(AUTH_URL, **params)
+        # Checking if the region is China to use the Chinese Auth URL
+        if self.region == "86":
+            auth_url_selected = AUTH_URL_CHINA
+        else:
+            auth_url_selected = AUTH_URL
+        
+        resp = await self.send_http(auth_url_selected, **params)
 
         if resp is None:
             _LOGGER.error(
