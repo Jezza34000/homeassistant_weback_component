@@ -49,6 +49,12 @@ STATE_MAPPING = {
     VacDevice.ROBOT_ERROR: STATE_ERROR,
 }
 
+# Some models report time in minutes, not seconds, we need to adjust
+# calculations for them.
+SUB_TYPES_REPORTING_MINUTES = [
+    "x-styleb",
+]
+
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Weback robot vacuums."""
@@ -233,7 +239,10 @@ class WebackVacuumRobot(StateVacuumEntity):
             clean_time = self.device.robot_status["clean_time"]
             if clean_time is None:
                 clean_time = 0
-            extra_value["clean_time"] = (round(clean_time / 60, 0),)
+            if self.device.sub_type in SUB_TYPES_REPORTING_MINUTES:
+                extra_value["clean_time"] = (clean_time,)
+            else:
+                extra_value["clean_time"] = (round(clean_time / 60, 0),)
 
         return extra_value
 
