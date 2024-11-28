@@ -1,6 +1,13 @@
 {
-  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended"
+    "config:base"
+  ],
+  "packageRules": [
+    {
+      "description": "Update dependencies in manifest.json",
+      "matchFileNames": ["manifest.json"],
+      "matchPackageNames": ["websocket-client"],
+      "enabled": true
+    }
   ]
 }
