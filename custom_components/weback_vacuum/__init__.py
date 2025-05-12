@@ -2,7 +2,8 @@
 
 import logging
 
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.discovery import load_platform
+from homeassistant.helpers import config_validation as cv
 import voluptuous as vol
 from homeassistant.const import (
     CONF_API_VERSION,
@@ -101,6 +102,6 @@ async def async_setup(hass, config):
 
     if hass.data[DOMAIN]:
         _LOGGER.debug("Starting vacuum robot components")
-        hass.helpers.discovery.load_platform("vacuum", DOMAIN, {}, config)
-        hass.helpers.discovery.load_platform("camera", DOMAIN, {}, config)
+        load_platform(hass, "vacuum", DOMAIN, {}, config)
+        load_platform(hass, "camera", DOMAIN, {}, config)
     return True
