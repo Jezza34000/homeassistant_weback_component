@@ -3,17 +3,16 @@ Weback API class
 """
 
 import asyncio
-import configparser
 import hashlib
 import json
 import logging
-import os
 import threading
 import time
 from datetime import datetime, timedelta
 
 import httpx
 import websocket
+import ssl
 
 from .vacmap import VacMap
 
@@ -37,10 +36,6 @@ MAP_DATA = "map_data"
 N_RETRY = 8
 ACK_TIMEOUT = 5
 HTTP_TIMEOUT = 5
-
-# ROOT DIR
-CREDS_FILE = "wb_creds"
-COMPONENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 class WebackApi:
@@ -92,16 +87,12 @@ class WebackApi:
             },
         }
 
-        # Checking if there is cached token and is still valid
-        if self.verify_cached_creds():
-            return True
-
         # Checking if the region is China to use the Chinese Auth URL
         if self.region == "86":
             auth_url_selected = AUTH_URL_CHINA
         else:
             auth_url_selected = AUTH_URL
-        
+
         resp = await self.send_http(auth_url_selected, **params)
 
         if resp is None:
@@ -125,7 +116,6 @@ class WebackApi:
             self.token_exp = now_date + timedelta(seconds=self.token_duration)
             _LOGGER.debug("WebackApi login successful")
 
-            self.save_token_file()
             return True
         if result_msg == SERVICE_ERROR:
             # Wrong APP
@@ -146,67 +136,6 @@ class WebackApi:
         # Login NOK
         _LOGGER.error("WebackApi can't login (reason is: %s)", result_msg)
         return False
-
-    def verify_cached_creds(self):
-        """
-        Check if cached creds are not outdated
-        """
-        creds_data = self.get_token_file()
-        if "weback_token" in creds_data:
-            weback_token = creds_data["weback_token"]
-            if self.check_token_is_valid(
-                weback_token.get("token_exp"),
-            ) and self.user == weback_token.get("user"):
-                # Valid creds to use, loading it
-                self.jwt_token = weback_token.get("jwt_token")
-                self.region_name = weback_token.get("region_name")
-                self.wss_url = weback_token.get("wss_url")
-                self.api_url = weback_token.get("api_url")
-                self.token_exp = weback_token.get("token_exp")
-                _LOGGER.debug("WebackApi use cached creds.")
-                return True
-        _LOGGER.debug("WebackApi has no or invalid cached creds, renew it...")
-        return False
-
-    @staticmethod
-    def get_token_file() -> dict:
-        """
-        Open token file and get all data.
-        """
-        creds_data = {}
-        try:
-            config = configparser.ConfigParser()
-            config.read(os.path.join(COMPONENT_DIR, CREDS_FILE))
-            creds_data = config._sections
-        except Exception as get_err:
-            _LOGGER.debug(
-                "WebackApi not found or invalid weback creds file error=%s",
-                get_err,
-            )
-        return creds_data
-
-    def save_token_file(self):
-        """
-        Save token file with all information
-        """
-        try:
-            config = configparser.ConfigParser()
-            config.add_section("weback_token")
-            config.set("weback_token", "user", str(self.user))
-            config.set("weback_token", "jwt_token", str(self.jwt_token))
-            config.set("weback_token", "token_exp", str(self.token_exp))
-            config.set("weback_token", "api_url", str(self.api_url))
-            config.set("weback_token", "wss_url", str(self.wss_url))
-            config.set("weback_token", "region_name", str(self.region_name))
-            with open(
-                os.path.join(COMPONENT_DIR, CREDS_FILE),
-                "w",
-                encoding="utf-8",
-            ) as configfile:
-                config.write(configfile)
-            _LOGGER.debug("WebackApi saved new creds")
-        except Exception as excpt_msg:
-            _LOGGER.debug("WebackApi failed to saved new creds details=%s", excpt_msg)
 
     @staticmethod
     def check_token_is_valid(token) -> bool:
@@ -277,9 +206,20 @@ class WebackApi:
         """
         _LOGGER.debug("Send HTTP request Url=%s Params=%s", url, params)
         timeout = httpx.Timeout(HTTP_TIMEOUT, connect=15.0)
+
+        # Create an SSL context that uses asyncio
+        ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+
+        # Load default certs in a non-blocking way
+        loop = asyncio.get_running_loop()
+        await loop.run_in_executor(None, ssl_context.load_default_certs)
+
         for attempt in range(N_RETRY):
             try:
-                async with httpx.AsyncClient(timeout=timeout) as client:
+                async with httpx.AsyncClient(
+                    timeout=timeout,
+                    verify=ssl_context,
+                ) as client:
                     req = await client.post(url, **params)
                     if req.status_code == 200:
                         # Server status OK
@@ -288,7 +228,8 @@ class WebackApi:
                         return req.json()
                     # Server status NOK
                     _LOGGER.warning(
-                        "WebackApi : Bad server response (status code=%s) retry... (%s/%s)",
+                        "WebackApi : Bad server response (status code=%s) "
+                        "retry... (%s/%s)",
                         req.status_code,
                         attempt,
                         N_RETRY,
@@ -483,9 +424,6 @@ class WebackWssCtrl(WebackApi):
         self._last_refresh = 0
         self.sent_counter = 0
 
-        # Reloading cached creds
-        self.verify_cached_creds()
-
     async def check_credentials(self):
         """
         Check if credentials for WSS link are OK
@@ -540,12 +478,13 @@ class WebackWssCtrl(WebackApi):
             if self.wst.is_alive():
                 _LOGGER.debug("WebackApi (WSS) Thread was init")
                 return True
-            _LOGGER.error("WebackApi (WSS) Thread connection init has FAILED")
-            return False
+            else:
+                _LOGGER.error("WebackApi (WSS) Thread connection init has FAILED")
+                return False
 
         except Exception as e:
             self.socket_state = SOCK_ERROR
-            _LOGGER.debug("WebackApi (WSS) Error while opening socket", e)
+            _LOGGER.debug("WebackApi (WSS) Error while opening socket %s", e)
             return False
 
     async def connect_wss(self):
@@ -616,7 +555,6 @@ class WebackWssCtrl(WebackApi):
                     self.map = VacMap(wss_data["map_data"])
                 else:
                     self.map.wss_update(wss_data["map_data"])
-                # self.render_map()
             except Exception as msg_excpt:
                 _LOGGER.error(
                     "WebackApi (WSS) Error during on_message (map_data) (details=%s)",
@@ -631,7 +569,8 @@ class WebackWssCtrl(WebackApi):
                 wss_data,
             )
 
-        # Close WSS link if we don't need it anymore or it will get closed by remote side
+        # Close WSS link if we don't need it anymore
+        # or it will get closed by remote side
         if self._refresh_time == 120:
             _LOGGER.debug("WebackApi (WSS) Closing WSS...")
             self.ws.close()
@@ -654,7 +593,7 @@ class WebackWssCtrl(WebackApi):
             self.ws.close()
             self.socket_state = SOCK_CLOSE
 
-        for attempt in range(N_RETRY):
+        for _ in range(N_RETRY):
             if self.socket_state == SOCK_CONNECTED:
                 try:
                     self.ws.send(json_message)
@@ -669,7 +608,8 @@ class WebackWssCtrl(WebackApi):
                     )
             else:
                 _LOGGER.debug(
-                    "WebackApi (WSS) Can't publish message socket_state=%s, reconnecting...",
+                    "WebackApi (WSS) Can't publish message socket_state=%s"
+                    ", reconnecting...",
                     self.socket_state,
                 )
                 await self.connect_wss()
@@ -702,7 +642,7 @@ class WebackWssCtrl(WebackApi):
     async def force_cmd_refresh(self, thing_name, sub_type):
         """Force refresh"""
         _LOGGER.debug("WebackApi (WSS) force refresh after sending cmd...")
-        for i in range(4):
+        for _ in range(4):
             await asyncio.sleep(0.6)
             await self.update_status(thing_name, sub_type)
 
