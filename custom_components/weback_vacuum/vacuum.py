@@ -3,15 +3,17 @@
 import logging
 
 from homeassistant.components.vacuum import (
-    STATE_CLEANING,
-    STATE_DOCKED,
-    STATE_ERROR,
-    STATE_IDLE,
-    STATE_PAUSED,
-    STATE_RETURNING,
     StateVacuumEntity,
     VacuumEntityFeature,
 )
+
+STATE_CLEANING = "cleaning"
+STATE_DOCKED = "docked"
+STATE_ERROR = "error"
+STATE_IDLE = "idle"
+STATE_PAUSED = "paused"
+STATE_RETURNING = "returning"
+
 from homeassistant.helpers.icon import icon_for_battery_level
 
 from . import DOMAIN, VacDevice
